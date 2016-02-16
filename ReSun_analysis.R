@@ -155,4 +155,3 @@ t <- Sys.time() - t
 
 cat("Programado por Ricardo Faria \n
     Finalizado em", t, "mnts")
-
