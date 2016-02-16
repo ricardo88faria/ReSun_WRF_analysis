@@ -5,7 +5,7 @@ Work in progress!!!
 
 ## Results:
 
-**High quality png examples**
+**High quality image (png) example**
 
 * Global horizontal radiation
 ![alt text](obs/Rad_2014-01-04.png)
@@ -14,7 +14,7 @@ Work in progress!!!
 **Google Earth (kmz) example**
 
 * Global horizontal radiation
-![alt text](obs/kmz.tiff)
+![alt text](obs/kmz.png)
 
 
 **Animations (GIF) example**
