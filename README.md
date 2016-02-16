@@ -9,7 +9,7 @@ Work in progress!!!
 
 * Global horizontal radiation
 ![alt text](obs/Rad_2014-01-04.png)
-
+![alt text](obs/Rad_2014-01-01.png)
 
 **Google Earth (kmz) example**
 
