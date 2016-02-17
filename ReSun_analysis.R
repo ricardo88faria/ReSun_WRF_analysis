@@ -10,8 +10,7 @@ library(raster)
 library(plotKML)
 #library(RNetCDF)
 library(ggplot2)
-library(sp)
-library(rgdal)
+library(plotGoogleMaps)
 
 
 #limpeza ambiente e objetos:
@@ -26,7 +25,7 @@ cat("Programado por Ricardo Faria \n
 t <- Sys.time()
 
 #create folders
-system("mkdir kmz Images GIFs graphs")
+system("mkdir kmz Images GIFs graphs GoogleMaps")
 
 #cores dos graficos
 rgb.palette.rad <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
@@ -167,61 +166,11 @@ gif_name <- paste("GIFs/", "Rad_", as.Date(times[[i]]), ".gif", sep="")
 
 system(paste("convert -verbose -resize 30% -delay 80 -loop 0", paste("Images/", "*", sep=""), gif_name))
 
-#################
-radiac <- data.frame(get(variav_name))
+#GoogleMaps in .html
+setwd("GoogleMaps")
+plotGoogleMaps(test, filename="rad.html", layerName="Radiação na Madeira", fillOpacity=0.4, strokeWeight=0, colPalette = rgb.palette.rad(50), openMap = FALSE)
+setwd("../")
 
-
-siar <- read.csv('siar.csv')
-summary(siar)
-siarSP <- SpatialPointsDataFrame(siar[,c(6, 7)], siar[,-c(6,7)])
-writeOGR(siarSP, 'siar.geojson', 'siarSP', driver='GeoJSON')
-
-Spatial
-
-sp <- data.frame(get(variav_name))
-
-summary(get(variav_name))
-siarSP <- SpatialPointsDataFrame(test)
-writeOGR(siarSP, 'siar.geojson', 'siarSP', driver='GeoJSON')
-
-
-##
-
-library(leafletR)
-
-# load example data (Fiji Earthquakes)
-data(quakes)
-
-# store data in GeoJSON file (just a subset here)
-q.dat <- toGeoJSON(data=quakes[1:99,], dest=tempdir(), name="quakes")
-
-# make style based on quake magnitude
-q.style <- styleGrad(prop="mag", breaks=seq(4, 6.5, by=0.5), 
-                     style.val=rev(heat.colors(5)), leg="Richter Magnitude", 
-                     fill.alpha=0.7, rad=8)
-
-# create map
-q.map <- leaflet(data=q.dat, dest=tempdir(), title="Fiji Earthquakes", 
-                 base.map="mqsat", style=q.style, popup="mag")
-
-# view map in browser
-q.map
-
-##
-
-Borough <- GreaterLondonUTM[,"name"]
-
-for(i in unique(GreaterLondonUTM$name)){
-      sub.name <- Local.Intensity[Local.Intensity[,1]==i,2]
-      
-      Borough[Borough$name==i,"Intensity"] <- sub.name
-      
-      Borough[Borough$name==i,"Intensity.Area"] <- round(sub.name/(GreaterLondonUTM[GreaterLondonUTM$name==i,]@polygons[[1]]@area/10000),4)
-}
-
-
-
-#################
 
 t <- (Sys.time() - t)
 
