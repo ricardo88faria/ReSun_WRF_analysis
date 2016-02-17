@@ -168,7 +168,7 @@ system(paste("convert -verbose -resize 30% -delay 80 -loop 0", paste("Images/", 
 
 #GoogleMaps in .html
 setwd("GoogleMaps")
-plotGoogleMaps(test, filename="rad.html", layerName="Radiação na Madeira", fillOpacity=0.4, strokeWeight=0, colPalette = rgb.palette.rad(50), openMap = FALSE)
+plotGoogleMaps(test, filename="rad.html", layerName="Radiação na Madeira", fillOpacity=0.4, strokeWeight=0, colPalette = rgb.palette.rad(30), openMap = FALSE)
 setwd("../")
 
 
