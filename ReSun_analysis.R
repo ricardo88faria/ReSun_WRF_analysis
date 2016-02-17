@@ -9,6 +9,9 @@ library(ncdf4)
 library(raster)
 library(plotKML)
 #library(RNetCDF)
+library(ggplot2)
+library(sp)
+library(rgdal)
 
 
 #limpeza ambiente e objetos:
@@ -29,7 +32,7 @@ system("mkdir kmz Images GIFs graphs")
 rgb.palette.rad <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
 
 #open .nc
-fileNames <- Sys.glob("wrfout_ReSun_d03*.nc")
+fileNames <- Sys.glob("*.nc")
 nc <- nc_open(fileNames)
 names(nc$var)               #variav names
 
@@ -47,7 +50,7 @@ long <- unique(as.vector(ncvar_get(nc, names(nc$var)[3])[,,1]))
 hgt <- ncvar_get(nc, names(nc$var)[9])[,,1]
 
 times <- list()
-
+max_graph <- list()
 #ciclo abrir ficheiros
 for (i in 1:length(fileNames)){ 
       temp_nc <- nc$filename[i]
@@ -72,11 +75,14 @@ for (i in 1:length(fileNames)){
                   print("nao ha sol nestes 10 minutos")
                   start <- start + 1
             }
-            print(paste(count))
+            print(paste("mnt", count))
             
       }
-      #rad = rad                 #W/m^2/day
+      
+      rad = rad/count                 #W/m^2/day
       #rad_h = rad /count          #W/m^2/h
+      max_graph <- append(max_graph, max(rad))
+      
       print(paste("numero de horas de sol =", dhours(count/6), ", primeiro raio de sol às", dhours(start/(6*2)), "hora solar"))
       
       assign(paste("rad_", as.Date(times[[i]]), sep = ""), rad)    
@@ -97,18 +103,29 @@ for (i in 1:length(times)) {
 }
 
 #gráfico
-graph_name <- paste("graphs/Rad_daily_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
-png(graph_name, width = 5950, height = 4500, units = "px", res = 500)
+
+graph_name_eps <- paste("graphs/Rad_daily_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".pdf", sep = "")
+pdf(graph_name_eps, width = 5950, height = 4500)
 
 x = seq(1, length(times), by= 1)
 plot(x = x, y = media_day, xlab = paste("Dia Juliano"), ylab = paste("Radiação [W/m^2]"), main = paste("Radiação Solar diária na Ilha da Madeira"), type = "o", col = "blue", lwd = 2)
+grid()
 
+dev.off()
+
+graph_name_png <- paste("graphs/Rad_daily_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
+png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
+
+x = seq(1, length(times), by= 1)
+plot(x = x, y = media_day, xlab = paste("Dia Juliano"), ylab = paste("Radiação [W/m^2]"), main = paste("Radiação Solar diária na Ilha da Madeira"), type = "o", col = "blue", lwd = 2)
+grid()
 dev.off()
 
 #equacao rotacao de matriz
 matrix_rotate <- function(x)
       t(apply(x, 2, rev))
 
+max_axis <- max(unlist(max_graph)) + 50
 
 #ciclo gerar graficos e kmz
 for (i in 1:length(times)) {
@@ -119,7 +136,7 @@ for (i in 1:length(times)) {
       name_png = paste("Images/", "Rad_", as.Date(times[[i]]), ".png", sep = "")
       png(name_png, width = 5950, height = 4500, units = "px", res = 500)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
       
-      filled.contour(long, lat, get(variav_name), asp = 1, color = rgb.palette.rad, levels = seq(0, 30000, 1000), # nlevels = 400, #axes = F #(12), nlev=13,
+      filled.contour(long, lat, get(variav_name), asp = 1, color = rgb.palette.rad, levels = seq(0, max_axis, 20), # nlevels = 400, #axes = F #(12), nlev=13,
                      plot.title = title(main = as.expression(paste("Radiação Solar diária na Ilha da Madeira a", as.Date(times[[i]]))), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
                      plot.axes = {axis(1); axis(2); contour(long, lat, hgt, add=TRUE, lwd=0.5, labcex=0.7, levels=c(2, seq(0, 500, 50), seq(500, 1900, 100)), drawlabels=  T, col = "grey30"); grid()},
                      key.title = title(main =  as.expression(paste("[W/m^2]"))))
@@ -150,8 +167,65 @@ gif_name <- paste("GIFs/", "Rad_", as.Date(times[[i]]), ".gif", sep="")
 
 system(paste("convert -verbose -resize 30% -delay 80 -loop 0", paste("Images/", "*", sep=""), gif_name))
 
+#################
+radiac <- data.frame(get(variav_name))
 
-t <- Sys.time() - t
+
+siar <- read.csv('siar.csv')
+summary(siar)
+siarSP <- SpatialPointsDataFrame(siar[,c(6, 7)], siar[,-c(6,7)])
+writeOGR(siarSP, 'siar.geojson', 'siarSP', driver='GeoJSON')
+
+Spatial
+
+sp <- data.frame(get(variav_name))
+
+summary(get(variav_name))
+siarSP <- SpatialPointsDataFrame(test)
+writeOGR(siarSP, 'siar.geojson', 'siarSP', driver='GeoJSON')
+
+
+##
+
+library(leafletR)
+
+# load example data (Fiji Earthquakes)
+data(quakes)
+
+# store data in GeoJSON file (just a subset here)
+q.dat <- toGeoJSON(data=quakes[1:99,], dest=tempdir(), name="quakes")
+
+# make style based on quake magnitude
+q.style <- styleGrad(prop="mag", breaks=seq(4, 6.5, by=0.5), 
+                     style.val=rev(heat.colors(5)), leg="Richter Magnitude", 
+                     fill.alpha=0.7, rad=8)
+
+# create map
+q.map <- leaflet(data=q.dat, dest=tempdir(), title="Fiji Earthquakes", 
+                 base.map="mqsat", style=q.style, popup="mag")
+
+# view map in browser
+q.map
+
+##
+
+Borough <- GreaterLondonUTM[,"name"]
+
+for(i in unique(GreaterLondonUTM$name)){
+      sub.name <- Local.Intensity[Local.Intensity[,1]==i,2]
+      
+      Borough[Borough$name==i,"Intensity"] <- sub.name
+      
+      Borough[Borough$name==i,"Intensity.Area"] <- round(sub.name/(GreaterLondonUTM[GreaterLondonUTM$name==i,]@polygons[[1]]@area/10000),4)
+}
+
+
+
+#################
+
+t <- (Sys.time() - t)
 
 cat("Programado por Ricardo Faria \n
     Finalizado em", t, "mnts")
+
+print(t)
