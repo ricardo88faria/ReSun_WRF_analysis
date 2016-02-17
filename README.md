@@ -17,6 +17,7 @@ Work in progress!!!
 
 * Global horizontal radiation
 ![alt text](obs/kmz.png)
+![alt text](obs/map.geojson)
 
 **Animations (GIF) example**
 
