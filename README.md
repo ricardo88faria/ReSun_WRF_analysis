@@ -18,7 +18,8 @@ Work in progress!!!
 * Global horizontal radiation
 ![alt text](obs/kmz.png)
 
-http://www.fabioveronesi.net/Blog/Crimes_Boroughs.html
+
+<script src="http://www.fabioveronesi.net/Blog/Crimes_Boroughs.html<username>/<repo>/<ref>/<path_to_file>"></script>
 
 
 **Animations (GIF) example**
