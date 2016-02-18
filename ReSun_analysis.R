@@ -11,6 +11,7 @@ library(plotKML)
 #library(RNetCDF)
 library(ggplot2)
 library(plotGoogleMaps)
+library(zoo)
 
 
 #limpeza ambiente e objetos:
@@ -106,7 +107,7 @@ for (i in 1:length(fileNames)){
       
       #somar media das horas num vector
       rad_hd <- rad_hd + rad_h
-      rad_hd_dataf[, fileNames[i]] <- rad_h
+      rad_hd_dataf[, format(as.POSIXct(strptime(times[[i]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d")] <- rad_h
       
       #for (l in 1:24) {
       #      assign(paste("rad_h_", l, "_", as.Date(times[[i]]), sep = ""), get(paste("rad_h_", l, sep = "")))
@@ -136,22 +137,49 @@ for (i in 1:length(times)) {
       
 }
 
+time_series <- zoo(rad_hd_dataf)
+
+x_dias = seq(1, length(times), by= 1)
+x_horas = seq(1, 24, by= 1)
+#rad_hd_dataf$hora <- x_horas
+
 #gráfico
-graph_name_png <- paste("graphs/Rad_daily_h_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
+graph_name_png <- paste("graphs/Rad_hour_TS_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
 png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
 
-x = seq(1, 24, by= 1)
-plot(x = x, y = rad_hd_dataf$media, xlab = paste("Hora do dia"), ylab = paste("Radiação [W/m^2]"), main = paste("Radiação Solar diária na Ilha da Madeira"), type = "o", col = "blue", lwd = 2)
-grid()
+autoplot(time_series, facets = NULL) + #ggplot
+      geom_line() +
+      labs (title = "Radiação Solar diária na Ilha da Madeira") +
+      scale_x_continuous (name = "Hora") +
+      scale_y_continuous (name = "Radiação [W/m^2]")
+
 dev.off()
+
+
+graph_name_png <- paste("graphs/Rad_month_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
+png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
+
+ggplot(data.frame(x_horas, rad_hd_dataf$media)) +
+      geom_line(aes(x = x_horas ,y = rad_hd_dataf$media), color = "blue") +
+      labs (title = "Radiação Solar diária na Ilha da Madeira") +
+      scale_x_continuous (name = "Hora") +
+      scale_y_continuous (name = "Radiação [W/m^2]")
+
+dev.off()
+
 
 graph_name_png <- paste("graphs/Rad_daily_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
 png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
 
-x = seq(1, length(times), by= 1)
-plot(x = x, y = media_day, xlab = paste("Dia Juliano"), ylab = paste("Radiação [W/m^2]"), main = paste("Radiação Solar diária na Ilha da Madeira"), type = "o", col = "blue", lwd = 2)
-grid()
+ggplot(data.frame(x_dias,media_day)) +
+      geom_line(aes(x = x_dias ,y = media_day), color = "blue") +
+      geom_point(aes(x = x_dias ,y = media_day)) +
+      labs (title = "Radiação Solar diária na Ilha da Madeira") +
+      scale_x_continuous (name = "Nº do Dia") +
+      scale_y_continuous (name = "Radiação [W/m^2]")
+
 dev.off()
+
 
 #equacao rotacao de matriz
 matrix_rotate <- function(x)
@@ -208,6 +236,6 @@ setwd("../")
 t <- (Sys.time() - t)
 
 cat("Programado por Ricardo Faria \n
-    Finalizado em", t, "mnts")
+    Finalizado em :")
 
 print(t)
