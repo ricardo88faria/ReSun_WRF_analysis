@@ -14,8 +14,8 @@ library(plotGoogleMaps)
 
 
 #limpeza ambiente e objetos:
-#rm(list=ls())
-#cat("\014")
+rm(list=ls())
+cat("\014")
 
 #####################################
 cat("Programado por Ricardo Faria \n
@@ -38,18 +38,24 @@ names(nc$var)               #variav names
 #sist. de coordenadas, projecao e coordenadas (N-S, E-O)
 proj <- CRS('+proj=longlat +datum=WGS84')
 
-lat_min <- min(ncvar_get(nc, names(nc$var)[2]))
-lat_max <- max(ncvar_get(nc, names(nc$var)[2]))
-lat <- unique(as.vector(ncvar_get(nc, names(nc$var)[2])[,,1]))
+lat_min <- min(ncvar_get(nc, "XLAT")[,,1])
+lat_max <- max(ncvar_get(nc, names(nc$var)[2])[,,1])
+lat <- unique(as.vector(ncvar_get(nc, "XLAT")[,,1]))
 
-long_min <- min(ncvar_get(nc, names(nc$var)[3]))
-long_max <- max(ncvar_get(nc, names(nc$var)[3]))
+long_min <- min(ncvar_get(nc, "XLONG")[,,1])
+long_max <- max(ncvar_get(nc, names(nc$var)[3])[,,1])
 long <- unique(as.vector(ncvar_get(nc, names(nc$var)[3])[,,1]))
 
-hgt <- ncvar_get(nc, names(nc$var)[9])[,,1]
+hgt <- ncvar_get(nc, "HGT")[,,1]
+
+hour_list <- c(seq(from = 1, to = 145, by = 6))
+seq_i <- c(seq(from = 1, to = 145-6, by = 6))
+seq_f <- c(seq(from = 6, to = 145, by = 6))
 
 times <- list()
 max_graph <- list()
+rad_hd <- 0
+rad_hd_dataf <- data.frame(row.names = seq(1, 24, by=1))
 #ciclo abrir ficheiros
 for (i in 1:length(fileNames)){ 
       temp_nc <- nc$filename[i]
@@ -71,28 +77,57 @@ for (i in 1:length(fileNames)){
                   count <- count + 1
                   
             } else {
+                  
                   print("nao ha sol nestes 10 minutos")
                   start <- start + 1
+                  
             }
-            print(paste("mnt", count))
+            print(paste(fileNames[i], "mnt", count))
             
       }
       
+      rad_h <- c()
+      for (l in 1:24) {
+            rad_h <- append(rad_h, median(ncvar_get(temp_nc, names(nc$var)[12])[,,seq_i[l]:seq_f[l]]))
+            #rad_h <- (rad_h[,,1] + rad_h[,,2] + rad_h[,,3] + rad_h[,,4] + rad_h[,,5] + rad_h[,,6])/6 # media dessa hora 
+            
+            #assign(paste("rad_h_", l, sep = ""), rad_h)
+            
+            count_h <- l
+            print(paste(fileNames[i], "hora", l))
+      }
+      
+      #media diaria de contando somente horas com radiacao
       rad = rad/count                 #W/m^2/day
       #rad_h = rad /count          #W/m^2/h
+      
+      #retirar valor maximo de radiacao para grafico
       max_graph <- append(max_graph, max(rad))
+      
+      #somar media das horas num vector
+      rad_hd <- rad_hd + rad_h
+      rad_hd_dataf[, fileNames[i]] <- rad_h
+      
+      #for (l in 1:24) {
+      #      assign(paste("rad_h_", l, "_", as.Date(times[[i]]), sep = ""), get(paste("rad_h_", l, sep = "")))
+      #}
       
       print(paste("numero de horas de sol =", dhours(count/6), ", primeiro raio de sol às", dhours(start/(6*2)), "hora solar"))
       
       assign(paste("rad_", as.Date(times[[i]]), sep = ""), rad)    
       #assign(paste("rad_h", i, sep = ""), rad_h) 
+      
       nc_close(temp_nc)
       
 }
 
+#fazer média da rad das horas somadas dos dias em estudo
+rad_hd <- rad_hd/length(fileNames)
+rad_hd_dataf$media <- apply(rad_hd_dataf, 1, median)
+
 nc_close(nc)
 
-media_day <- list()
+media_day <- c()
 #ciclo para fazer lista da rad media de todos os dias
 for (i in 1:length(times)) {
       
@@ -102,14 +137,12 @@ for (i in 1:length(times)) {
 }
 
 #gráfico
+graph_name_png <- paste("graphs/Rad_daily_h_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
+png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
 
-graph_name_eps <- paste("graphs/Rad_daily_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".pdf", sep = "")
-pdf(graph_name_eps, width = 5950, height = 4500)
-
-x = seq(1, length(times), by= 1)
-plot(x = x, y = media_day, xlab = paste("Dia Juliano"), ylab = paste("Radiação [W/m^2]"), main = paste("Radiação Solar diária na Ilha da Madeira"), type = "o", col = "blue", lwd = 2)
+x = seq(1, 24, by= 1)
+plot(x = x, y = rad_hd_dataf$media, xlab = paste("Hora do dia"), ylab = paste("Radiação [W/m^2]"), main = paste("Radiação Solar diária na Ilha da Madeira"), type = "o", col = "blue", lwd = 2)
 grid()
-
 dev.off()
 
 graph_name_png <- paste("graphs/Rad_daily_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
@@ -137,7 +170,7 @@ for (i in 1:length(times)) {
       
       filled.contour(long, lat, get(variav_name), asp = 1, color = rgb.palette.rad, levels = seq(0, max_axis, 20), # nlevels = 400, #axes = F #(12), nlev=13,
                      plot.title = title(main = as.expression(paste("Radiação Solar diária na Ilha da Madeira a", as.Date(times[[i]]))), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
-                     plot.axes = {axis(1); axis(2); contour(long, lat, hgt, add=TRUE, lwd=0.5, labcex=0.7, levels=c(2, seq(0, 500, 50), seq(500, 1900, 100)), drawlabels=  T, col = "grey30"); grid()},
+                     plot.axes = {axis(1); axis(2); contour(long, lat, hgt, add=TRUE, lwd=0.5, labcex=0.7, levels=c(10, seq(10, 500, 50), seq(500, 1900, 100)), drawlabels=  T, col = "grey30"); grid()},
                      key.title = title(main =  as.expression(paste("[W/m^2]"))))
       
       #plot(getMap(resolution = "high"), add = T)
