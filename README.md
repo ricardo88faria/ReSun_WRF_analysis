@@ -22,7 +22,7 @@ Work in progress!!!
 **Animations (GIF) example**
 
 * Global horizontal radiation
-![alt text](obs/Rad_2009-05-02.gif)
+![alt text](obs/Rad_2009-05-25.gif)
 
 **Graphics analysis**
 
