@@ -72,7 +72,7 @@ for (i in 1:length(fileNames)){
       #ciclo para is buscar valores de todos os 10 mnts
       for (j in 1:144) {
             #ciclo que so contabiliza espaco temporal com valores de radiacao > 0
-            if (variav_rad[,,j] > 1) {
+            if (min(variav_rad[,,j]) > 1) {
                   
                   rad <- rad + ncvar_get(temp_nc, names(nc$var)[12])[,,j]   #24/144*60 = 10mnts
                   count <- count + 1
