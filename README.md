@@ -17,9 +17,8 @@ Work in progress!!!
 
 * Global horizontal radiation
 ![alt text](obs/kmz.png)
-%%HTML
 
-[[embed url=https://github.com/ricardo88faria/ReSun_WRF_analysis/blob/master/obs/raster_map.html]]
+[[embed url=https://raw.githubusercontent.com/ricardo88faria/ReSun_WRF_analysis/master/obs/raster_map.html]]
 
 **Animations (GIF) example**
 
