@@ -13,13 +13,13 @@ Work in progress!!!
 ![alt text](obs/Rad_2009-05-01.png)
 ![alt text](obs/Rad_2009-05-02.png)
 
-**Google Earth (kmz) example**
+**Google Earth (kmz) & topografic data example**
 
 * Global horizontal radiation
 ![alt text](obs/kmz.png)
 
 * Map widget
-
+<iframe width="900" height="800" frameborder="0" scrolling="no" src="https://plot.ly/~ricardo88faria/10.embed"></iframe>
 
 
 
@@ -37,7 +37,7 @@ Work in progress!!!
 * Time Series of studied period
 ![alt text](obs/Rad_hour_TS_2009-04-30.png)
 
-<iframe width="640" height="480" frameborder="0" seamless="seamless" scrolling="no" src="https://plot.ly/~ricardo88faria/2/radiacao-solar-diaria-na-ilha-da-madeira"></iframe>
+<iframe width="900" height="800" frameborder="0" scrolling="no" src="https://plot.ly/~ricardo88faria/12.embed"></iframe>
 
 
 * Hourly median of studied period
