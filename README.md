@@ -37,11 +37,7 @@ Work in progress!!!
 * Time Series of studied period
 ![alt text](obs/Rad_hour_TS_2009-04-30.png)
 
-<div>
-    <a href="https://plot.ly/~ricardo88faria/12/" target="_blank" title="Radiação Solar diária na Ilha da Madeira" style="display: block; text-align: center;"><img src="https://plot.ly/~ricardo88faria/12.png" alt="Radiação Solar diária na Ilha da Madeira" style="max-width: 100%;width: 600px;"  width="600" onerror="this.onerror=null;this.src='https://plot.ly/404.png';" /></a>
-    <script data-plotly="ricardo88faria:12"  src="https://plot.ly/embed.js" async></script>
-</div>
-
+<iframe width="550" height="500" frameborder="0" scrolling="no" src="https://plot.ly/~ricardo88faria/12/radiacao-solar-diaria-na-ilha-da-madeira/"></iframe>
 
 
 * Hourly median of studied period
