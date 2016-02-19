@@ -20,6 +20,8 @@ Work in progress!!!
 
 [[embed url=https://raw.githubusercontent.com/ricardo88faria/ReSun_WRF_analysis/master/obs/raster_map.html]]
 
+<iframe src="https://raw.githubusercontent.com/ricardo88faria/ReSun_WRF_analysis/master/obs/raster_map.html" height="480" width="640"></iframe>
+
 **Animations (GIF) example**
 
 * Global horizontal radiation
