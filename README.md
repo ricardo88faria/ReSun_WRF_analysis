@@ -19,7 +19,7 @@ Work in progress!!!
 ![alt text](obs/kmz.png)
 
 * Map widget
-<iframe src="https://raw.githubusercontent.com/ricardo88faria/ReSun_WRF_analysis/master/obs/raster_map.html" height="480" width="640" style="display:block; margin: 0 auto;">&nbsp;></iframe>
+<iframe src="https://raw.githubusercontent.com/ricardo88faria/ReSun_WRF_analysis/master/obs/raster_map.html" width="640" height="480"></iframe>
 
 **Animations (GIF) example**
 
