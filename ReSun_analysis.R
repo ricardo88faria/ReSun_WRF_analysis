@@ -282,7 +282,11 @@ scene = list(zaxis = list(title = "HGT", range = c(10, 15000)))
 topog <- plot_ly(x = long, y = lat, z = z, type = "surface", colors = terrain.colors(20)) %>%
       layout(title = "3D Scatter plot", scene = scene)
 
-plotly_POST(topog, filename = "Madeira_topo")
+setwd("widgets")
+htmlwidgets::saveWidget(as.widget(topog), "raster_map.html")
+setwd("../")
+
+#plotly_POST(topog, filename = "Madeira_topo")
 
 for (i in 1:3) {
       
