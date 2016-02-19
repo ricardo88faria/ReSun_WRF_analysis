@@ -19,7 +19,9 @@ Work in progress!!!
 ![alt text](obs/kmz.png)
 
 * Map widget
-<iframe src="https://raw.githubusercontent.com/ricardo88faria/ReSun_WRF_analysis/master/obs/raster_map.html" width="640" height="480"></iframe>
+
+
+
 
 **Animations (GIF) example**
 
@@ -31,8 +33,12 @@ Work in progress!!!
 * Daily median of studied period
 ![alt text](obs/Rad_daily_2009-04-30.png)
 
+
 * Time Series of studied period
 ![alt text](obs/Rad_hour_TS_2009-04-30.png)
+
+<iframe width="640" height="480" frameborder="0" seamless="seamless" scrolling="no" src="https://plot.ly/~ricardo88faria/2/radiacao-solar-diaria-na-ilha-da-madeira"></iframe>
+
 
 * Hourly median of studied period
 ![alt text](obs/Rad_month_2009-04-30.png)
