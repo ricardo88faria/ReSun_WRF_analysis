@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
 
 #packages:
-
 library(lubridate)
 library(ncdf4)
 #library(rworldmap)
@@ -12,9 +11,15 @@ library(plotKML)
 library(ggplot2)
 library(plotGoogleMaps)
 library(zoo)
-library(plotly)
 library(htmlwidgets)
 library(leaflet)
+library(devtools)
+library(plotly)
+
+#plotly to server username nad api key
+Sys.setenv("plotly_username" = "ricardo88faria")
+Sys.setenv("plotly_api_key" = "ourxlm26la")
+#py <- plotly(username = 'ricardo88faria', key = 'ourxlm26la')
 
 
 #limpeza ambiente e objetos:
@@ -33,8 +38,7 @@ system("mkdir kmz Images GIFs graphs GoogleMaps widgets")
 
 #cores dos graficos
 rgb.palette.rad <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
-pal.rad <- colorNumeric(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), values(test),
-                    na.color = "transparent")
+
 
 #open .nc
 fileNames <- Sys.glob("*.nc")
@@ -189,20 +193,6 @@ plot(plot_time_med)
 dev.off()
 
 
-#plotly
-widget_1 <- ggplotly(plot_time_ser)
-widget_2 <- ggplotly(plot_day_med)
-widget_3 <- ggplotly(plot_time_med)
-
-for (i in 1:3) {
-      
-      setwd("widgets")
-      htmlwidgets::saveWidget(as.widget(get(paste("widget_", i, sep = ""))), paste("widget_", i,".html", sep = ""))
-      setwd("../")
-      
-}
-
-
 #equacao rotacao de matriz
 matrix_rotate <- function(x)
       t(apply(x, 2, rev))
@@ -227,6 +217,7 @@ for (i in 1:length(times)) {
       #contour(long, lat, hgt, add=TRUE, lwd=1, labcex=1, levels=0.99, drawlabels=FALSE, col="grey30")
       
       dev.off()
+
       
       ##kmz
       test <-  raster(matrix_rotate(matrix_rotate(matrix_rotate(get(variav_name)))), 
@@ -257,7 +248,10 @@ plotGoogleMaps(test, filename="rad.html", layerName="Radiação na Madeira", fil
 setwd("../")
 
 
-#map raster leaflet
+#map raster leaflet #ifelse(x < 0,'red','green')
+pal.rad <- colorNumeric(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), values(test),
+                        na.color = "transparent")
+
 raster_map <- leaflet() %>% addTiles() %>%
       addRasterImage(test, colors = pal.rad, opacity = 0.4) %>%
       addLegend(pal = pal.rad, values = values(test),
@@ -266,6 +260,39 @@ raster_map <- leaflet() %>% addTiles() %>%
 setwd("widgets")
 htmlwidgets::saveWidget(as.widget(raster_map), "raster_map.html")
 setwd("../")
+
+#contour plotly
+#data <- t(get(variav_name))
+#plot_ly(x = long, y = lat,  z = data, type = "contour")
+
+#plotly
+widget_1 <- ggplotly(plot_time_ser)
+widget_2 <- ggplotly(plot_day_med)
+widget_3 <- ggplotly(plot_time_med)
+
+#enviar plotly para servidor
+#plotly_POST(plot_time_ser, filename = "rad")
+
+#hgt[ncol(hgt):1, ] # ncol reordena numero esq - direita & nrow reordena numero cima - baixo
+
+z <- t(hgt)
+#z[z < 0] <- NA
+
+scene = list(zaxis = list(title = "HGT", range = c(10, 15000)))
+topog <- plot_ly(x = long, y = lat, z = z, type = "surface", colors = terrain.colors(20)) %>%
+      layout(title = "3D Scatter plot", scene = scene)
+
+plotly_POST(topog, filename = "Madeira_topo")
+
+for (i in 1:3) {
+      
+      setwd("widgets")
+      htmlwidgets::saveWidget(as.widget(get(paste("widget_", i, sep = ""))), paste("radiacao_", i,".html", sep = ""))
+      setwd("../")
+      
+}
+
+
 
 t <- (Sys.time() - t)
 
