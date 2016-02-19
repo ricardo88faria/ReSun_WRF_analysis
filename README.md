@@ -17,7 +17,9 @@ Work in progress!!!
 
 * Global horizontal radiation
 ![alt text](obs/kmz.png)
-![alt text](obs/rad.html)
+%%HTML
+
+[[embed url=obs/raster_map.html]]
 
 **Animations (GIF) example**
 

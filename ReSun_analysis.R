@@ -12,6 +12,9 @@ library(plotKML)
 library(ggplot2)
 library(plotGoogleMaps)
 library(zoo)
+library(plotly)
+library(htmlwidgets)
+library(leaflet)
 
 
 #limpeza ambiente e objetos:
@@ -26,10 +29,12 @@ cat("Programado por Ricardo Faria \n
 t <- Sys.time()
 
 #create folders
-system("mkdir kmz Images GIFs graphs GoogleMaps")
+system("mkdir kmz Images GIFs graphs GoogleMaps widgets")
 
 #cores dos graficos
 rgb.palette.rad <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
+pal.rad <- colorNumeric(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), values(test),
+                    na.color = "transparent")
 
 #open .nc
 fileNames <- Sys.glob("*.nc")
@@ -147,11 +152,12 @@ x_horas = seq(1, 24, by= 1)
 graph_name_png <- paste("graphs/Rad_hour_TS_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
 png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
 
-autoplot(time_series, facets = NULL) + #ggplot
+plot_time_ser <- autoplot(time_series, facets = NULL) + #ggplot
       geom_line() +
       labs (title = "Radiação Solar diária na Ilha da Madeira") +
       scale_x_continuous (name = "Hora") +
       scale_y_continuous (name = "Radiação [W/m^2]")
+plot(plot_time_ser)
 
 dev.off()
 
@@ -159,11 +165,12 @@ dev.off()
 graph_name_png <- paste("graphs/Rad_month_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
 png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
 
-ggplot(data.frame(x_horas, rad_hd_dataf$media)) +
+plot_day_med <- ggplot(data.frame(x_horas, rad_hd_dataf$media)) +
       geom_line(aes(x = x_horas ,y = rad_hd_dataf$media), color = "blue") +
       labs (title = "Radiação Solar diária na Ilha da Madeira") +
       scale_x_continuous (name = "Hora") +
       scale_y_continuous (name = "Radiação [W/m^2]")
+plot(plot_day_med)
 
 dev.off()
 
@@ -171,14 +178,29 @@ dev.off()
 graph_name_png <- paste("graphs/Rad_daily_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
 png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
 
-ggplot(data.frame(x_dias,media_day)) +
+plot_time_med <- ggplot(data.frame(x_dias,media_day)) +
       geom_line(aes(x = x_dias ,y = media_day), color = "blue") +
       geom_point(aes(x = x_dias ,y = media_day)) +
       labs (title = "Radiação Solar diária na Ilha da Madeira") +
       scale_x_continuous (name = "Nº do Dia") +
       scale_y_continuous (name = "Radiação [W/m^2]")
+plot(plot_time_med)
 
 dev.off()
+
+
+#plotly
+widget_1 <- ggplotly(plot_time_ser)
+widget_2 <- ggplotly(plot_day_med)
+widget_3 <- ggplotly(plot_time_med)
+
+for (i in 1:3) {
+      
+      setwd("widgets")
+      htmlwidgets::saveWidget(as.widget(get(paste("widget_", i, sep = ""))), paste("widget_", i,".html", sep = ""))
+      setwd("../")
+      
+}
 
 
 #equacao rotacao de matriz
@@ -222,16 +244,28 @@ for (i in 1:length(times)) {
       
 }
 
+
 #GIFs
 gif_name <- paste("GIFs/", "Rad_", as.Date(times[[i]]), ".gif", sep="")
 
 system(paste("convert -verbose -resize 30% -delay 80 -loop 0", paste("Images/", "*", sep=""), gif_name))
+
 
 #GoogleMaps in .html
 setwd("GoogleMaps")
 plotGoogleMaps(test, filename="rad.html", layerName="Radiação na Madeira", fillOpacity=0.4, strokeWeight=0, colPalette = rgb.palette.rad(30), openMap = FALSE)
 setwd("../")
 
+
+#map raster leaflet
+raster_map <- leaflet() %>% addTiles() %>%
+      addRasterImage(test, colors = pal.rad, opacity = 0.4) %>%
+      addLegend(pal = pal.rad, values = values(test),
+                title = "Radiação Solar")
+
+setwd("widgets")
+htmlwidgets::saveWidget(as.widget(raster_map), "raster_map.html")
+setwd("../")
 
 t <- (Sys.time() - t)
 
