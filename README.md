@@ -19,7 +19,7 @@ Work in progress!!!
 ![alt text](obs/kmz.png)
 %%HTML
 
-[[embed url=obs/raster_map.html]]
+[[embed url=https://github.com/ricardo88faria/ReSun_WRF_analysis/blob/master/obs/raster_map.html]]
 
 **Animations (GIF) example**
 
