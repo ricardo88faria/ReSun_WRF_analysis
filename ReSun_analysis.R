@@ -283,7 +283,7 @@ topog <- plot_ly(x = long, y = lat, z = z, type = "surface", colors = terrain.co
       layout(title = "3D Scatter plot", scene = scene)
 
 setwd("widgets")
-htmlwidgets::saveWidget(as.widget(topog), "raster_map.html")
+htmlwidgets::saveWidget(as.widget(topog), "topo.html")
 setwd("../")
 
 #plotly_POST(topog, filename = "Madeira_topo")
