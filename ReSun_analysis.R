@@ -146,7 +146,7 @@ media_day <- c()
 for (i in 1:length(times)) {
       
       variav_name <- paste(paste("rad_", as.Date(times[[i]]), sep = ""))
-      media_day <- c(media_day, median(get(variav_name))) # append por c
+      media_day <- append(media_day, median(get(variav_name)))
       
 }
 
