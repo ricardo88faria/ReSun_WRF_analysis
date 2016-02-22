@@ -62,15 +62,19 @@ hour_list <- c(seq(from = 1, to = 145, by = 6))
 seq_i <- c(seq(from = 1, to = 145-6, by = 6))
 seq_f <- c(seq(from = 6, to = 145, by = 6))
 
-times <- list()
-max_graph <- list()
+times <- c()
+max_graph <- c()
 rad_hd <- 0
 rad_hd_dataf <- data.frame(row.names = seq(1, 24, by=1))
 #ciclo abrir ficheiros
 for (i in 1:length(fileNames)){ 
       temp_nc <- nc$filename[i]
       temp_nc <- nc_open(temp_nc)
-      variav_rad <- ncvar_get(temp_nc, names(nc$var)[12])
+      variav_rad <- ncvar_get(temp_nc, "SWDOWN")  
+      
+      #test <- ncvar_get(temp_nc, "SWDOWN", start = c(1, 1, 114), count=c(-1, -1, 10))
+      #ou usar antes o ncdim_def
+      #ou ainda test[lat, long, time]
       
       #list of output dates
       times <- append(times, ncvar_get(temp_nc, names(nc$var)[1])[1])
@@ -92,7 +96,7 @@ for (i in 1:length(fileNames)){
                   start <- start + 1
                   
             }
-            print(paste(fileNames[i], "mnt", count))
+            print(paste(fileNames[i], "mnt", count + start))
             
       }
       
@@ -142,7 +146,7 @@ media_day <- c()
 for (i in 1:length(times)) {
       
       variav_name <- paste(paste("rad_", as.Date(times[[i]]), sep = ""))
-      media_day <- append(media_day, median(get(variav_name)))
+      media_day <- c(media_day, median(get(variav_name))) # append por c
       
 }
 
@@ -197,9 +201,9 @@ dev.off()
 matrix_rotate <- function(x)
       t(apply(x, 2, rev))
 
-max_axis <- max(unlist(max_graph)) + 50
+max_axis <- max(max_graph) + 50 #if not working do unlist
 
-#ciclo gerar graficos e kmz
+#ciclo gerar mapas e kmz
 for (i in 1:length(times)) {
       
       ##filled contour grafs
