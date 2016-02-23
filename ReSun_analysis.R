@@ -120,15 +120,15 @@ for (i in 1:length(fileNames)){
       
       #somar media das horas num vector
       rad_hd <- rad_hd + rad_h
-      rad_hd_dataf[, format(as.POSIXct(strptime(times[[i]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d")] <- rad_h
+      rad_hd_dataf[, format(as.POSIXct(strptime(times[i], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d")] <- rad_h
       
       #for (l in 1:24) {
-      #      assign(paste("rad_h_", l, "_", as.Date(times[[i]]), sep = ""), get(paste("rad_h_", l, sep = "")))
+      #      assign(paste("rad_h_", l, "_", as.Date(times[i]), sep = ""), get(paste("rad_h_", l, sep = "")))
       #}
       
       print(paste("numero de horas de sol =", dhours(count/6), ", primeiro raio de sol às", dhours(start/(6*2)), "hora solar"))
       
-      assign(paste("rad_", as.Date(times[[i]]), sep = ""), rad)    
+      assign(paste("rad_", as.Date(times[i]), sep = ""), rad)    
       #assign(paste("rad_h", i, sep = ""), rad_h) 
       
       nc_close(temp_nc)
@@ -145,7 +145,7 @@ media_day <- c()
 #ciclo para fazer lista da rad media de todos os dias
 for (i in 1:length(times)) {
       
-      variav_name <- paste(paste("rad_", as.Date(times[[i]]), sep = ""))
+      variav_name <- paste(paste("rad_", as.Date(times[i]), sep = ""))
       media_day <- append(media_day, median(get(variav_name)))
       
 }
@@ -157,7 +157,7 @@ x_horas = seq(1, 24, by= 1)
 #rad_hd_dataf$hora <- x_horas
 
 #gráfico
-graph_name_png <- paste("graphs/Rad_hour_TS_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
+graph_name_png <- paste("graphs/Rad_hour_TS_", format(as.POSIXct(strptime(times[1], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
 png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
 
 plot_time_ser <- autoplot(time_series, facets = NULL) + #ggplot
@@ -170,7 +170,7 @@ plot(plot_time_ser)
 dev.off()
 
 
-graph_name_png <- paste("graphs/Rad_month_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
+graph_name_png <- paste("graphs/Rad_month_", format(as.POSIXct(strptime(times[1], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
 png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
 
 plot_day_med <- ggplot(data.frame(x_horas, rad_hd_dataf$media)) +
@@ -183,7 +183,7 @@ plot(plot_day_med)
 dev.off()
 
 
-graph_name_png <- paste("graphs/Rad_daily_", format(as.POSIXct(strptime(times[[1]], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
+graph_name_png <- paste("graphs/Rad_daily_", format(as.POSIXct(strptime(times[1], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
 png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
 
 plot_time_med <- ggplot(data.frame(x_dias,media_day)) +
@@ -207,13 +207,13 @@ max_axis <- max(max_graph) + 50 #if not working do unlist
 for (i in 1:length(times)) {
       
       ##filled contour grafs
-      variav_name <- paste(paste("rad_", as.Date(times[[i]]), sep = ""))
+      variav_name <- paste(paste("rad_", as.Date(times[i]), sep = ""))
       
-      name_png = paste("Images/", "Rad_", as.Date(times[[i]]), ".png", sep = "")
+      name_png = paste("Images/", "Rad_", as.Date(times[i]), ".png", sep = "")
       png(name_png, width = 5950, height = 4500, units = "px", res = 500)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
       
       filled.contour(long, lat, get(variav_name), asp = 1, color = rgb.palette.rad, levels = seq(0, max_axis, 20), # nlevels = 400, #axes = F #(12), nlev=13,
-                     plot.title = title(main = as.expression(paste("Radiação Solar diária na Ilha da Madeira a", as.Date(times[[i]]))), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
+                     plot.title = title(main = as.expression(paste("Radiação Solar diária na Ilha da Madeira a", as.Date(times[i]))), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
                      plot.axes = {axis(1); axis(2); contour(long, lat, hgt, add=TRUE, lwd=0.5, labcex=0.7, levels=c(10, seq(10, 500, 50), seq(500, 1900, 100)), drawlabels=  T, col = "grey30"); grid()},
                      key.title = title(main =  as.expression(paste("[W/m^2]"))))
       
@@ -229,11 +229,11 @@ for (i in 1:length(times)) {
       #proj4string(test) <- CRS("+proj=longlat +datum=WGS84") #proj
       
       setwd("kmz")
-      system(paste("mkdir", paste("Rad_", as.Date(times[[i]]), sep = "")))
-      setwd(paste("Rad_", as.Date(times[[i]]), sep = ""))
+      system(paste("mkdir", paste("Rad_", as.Date(times[i]), sep = "")))
+      setwd(paste("Rad_", as.Date(times[i]), sep = ""))
       
-      #KML(test, file = paste("Rad_", as.Date(times[[i]]), ".kmz", sep = ""), colour = rgb.palette.rad)
-      plotKML(obj=test, folder.name="RAD", file.name=paste("Rad_", as.Date(times[[i]]), ".kmz", sep = ""), colour_scale = rgb.palette.rad(400), open.kml = FALSE)
+      #KML(test, file = paste("Rad_", as.Date(times[i]), ".kmz", sep = ""), colour = rgb.palette.rad)
+      plotKML(obj=test, folder.name="RAD", file.name=paste("Rad_", as.Date(times[i]), ".kmz", sep = ""), colour_scale = rgb.palette.rad(400), open.kml = FALSE)
       
       setwd("../../")
       
@@ -241,7 +241,7 @@ for (i in 1:length(times)) {
 
 
 #GIFs
-gif_name <- paste("GIFs/", "Rad_", as.Date(times[[i]]), ".gif", sep="")
+gif_name <- paste("GIFs/", "Rad_", as.Date(times[i]), ".gif", sep="")
 
 system(paste("convert -verbose -resize 30% -delay 80 -loop 0", paste("Images/", "*", sep=""), gif_name))
 
