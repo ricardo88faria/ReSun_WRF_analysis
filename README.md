@@ -10,13 +10,13 @@ Work in progress!!!
 **High quality image (png) example**
 
 * Global horizontal radiation
-![alt text](obs/Rad_2009-05-01.png)
-![alt text](obs/Rad_2009-05-02.png)
+![alt text](github/Rad_2009-05-01.png)
+![alt text](github/Rad_2009-05-02.png)
 
 **Google Earth (kmz) & topographic data example**
 
 * Global horizontal radiation
-![alt text](obs/kmz.png)
+![alt text](github/kmz.png)
 
 <dl>
   <dt>Topography</dt>
@@ -26,16 +26,16 @@ Work in progress!!!
 **Animations (GIF) example**
 
 * Global horizontal radiation
-![alt text](obs/Rad_2009-05-25.gif)
+![alt text](github/Rad_2009-05-25.gif)
 
 **Graphics analysis**
 
 * Daily median of studied period
-![alt text](obs/Rad_daily_2009-04-30.png)
+![alt text](github/Rad_daily_2009-04-30.png)
 
 
 * Time Series of studied period
-![alt text](obs/Rad_hour_TS_2009-04-30.png)
+![alt text](github/Rad_hour_TS_2009-04-30.png)
 
 <dl>
   <dt>Dynamic time Series</dt>
@@ -46,7 +46,7 @@ Work in progress!!!
 
 
 * Hourly median of studied period
-![alt text](obs/Rad_month_2009-04-30.png)
+![alt text](github/Rad_month_2009-04-30.png)
 
 ## Usage:
 
