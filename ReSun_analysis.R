@@ -3,6 +3,7 @@
 #packages:
 library(lubridate)
 library(ncdf4)
+library(R.matlab)
 #library(rworldmap)
 #library(rworldxtra)
 library(raster)
@@ -41,22 +42,30 @@ rgb.palette.rad <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1
 
 
 #open .nc
-fileNames <- Sys.glob("*.nc")
+fileNames <- Sys.glob("input/*.nc")
 nc <- nc_open(fileNames)
 names(nc$var)               #variav names
+
 
 #sist. de coordenadas, projecao e coordenadas (N-S, E-O)
 proj <- CRS('+proj=longlat +datum=WGS84')
 
-lat_min <- min(ncvar_get(nc, "XLAT")[,,1])
-lat_max <- max(ncvar_get(nc, names(nc$var)[2])[,,1])
-lat <- unique(as.vector(ncvar_get(nc, "XLAT")[,,1]))
+#lat_min <- min(ncvar_get(nc, "YDIM")[,,1])
+#lat_max <- max(ncvar_get(nc, names(nc$var)[2])[,,1])
+#lat <- unique(as.vector(ncvar_get(nc, "XLAT")[,,1]))
+lat_min <- min(ncvar_get(nc)[,,2])
+lat_max <- max(ncvar_get(nc)[,,2])
+lat <- unique(as.vector(ncvar_get(nc)[,,2]))
 
-long_min <- min(ncvar_get(nc, "XLONG")[,,1])
-long_max <- max(ncvar_get(nc, names(nc$var)[3])[,,1])
-long <- unique(as.vector(ncvar_get(nc, names(nc$var)[3])[,,1]))
+#long_min <- min(ncvar_get(nc, "XLONG")[,,1])
+#long_max <- max(ncvar_get(nc, names(nc$var)[3])[,,1])
+#long <- unique(as.vector(ncvar_get(nc, names(nc$var)[3])[,,1]))
+long_min <- min(ncvar_get(nc)[,,1])
+long_max <- max(ncvar_get(nc)[,,1])
+long <- unique(as.vector(ncvar_get(nc)[,,1]))
 
-hgt <- ncvar_get(nc, "HGT")[,,1]
+#hgt <- ncvar_get(nc, "HGT")[,,1]
+hgt <- ncvar_get(nc)[,,3]
 
 hour_list <- c(seq(from = 1, to = 145, by = 6))
 seq_i <- c(seq(from = 1, to = 145-6, by = 6))
