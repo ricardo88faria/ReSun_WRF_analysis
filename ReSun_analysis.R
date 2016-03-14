@@ -3,10 +3,10 @@
 #packages:
 library(lubridate)
 library(ncdf4)
-library(R.matlab)
-#library(rworldmap)
-#library(rworldxtra)
+#library(R.matlab)
+library(maptools)
 library(raster)
+library(rts)
 library(plotKML)
 #library(RNetCDF)
 library(ggplot2)
@@ -34,6 +34,10 @@ cat("Programado por Ricardo Faria \n
 
 t <- Sys.time()
 
+#source("config.txt")
+source("matrix_rotation.R")
+
+
 #create folders
 system("mkdir kmz Images GIFs graphs GoogleMaps widgets")
 
@@ -46,9 +50,10 @@ fileNames <- Sys.glob("input/*.nc")
 nc <- nc_open(fileNames)
 names(nc$var)               #variav names
 
-
 #sist. de coordenadas, projecao e coordenadas (N-S, E-O)
 proj <- CRS('+proj=longlat +datum=WGS84')
+land <- readShapeSpatial("input/map/PRT_adm2.shp", proj4string = proj)
+
 
 #lat_min <- min(ncvar_get(nc, "YDIM")[,,1])
 #lat_max <- max(ncvar_get(nc, names(nc$var)[2])[,,1])
@@ -67,187 +72,172 @@ long <- unique(as.vector(ncvar_get(nc)[,,1]))
 #hgt <- ncvar_get(nc, "HGT")[,,1]
 hgt <- ncvar_get(nc)[,,3]
 
-hour_list <- c(seq(from = 1, to = 145, by = 6))
-seq_i <- c(seq(from = 1, to = 145-6, by = 6))
-seq_f <- c(seq(from = 6, to = 145, by = 6))
+nc_close(nc)
 
-times <- c()
-max_graph <- c()
-rad_hd <- 0
-rad_hd_dataf <- data.frame(row.names = seq(1, 24, by=1))
+ncols <- length(long)
+nrows <- length(lat)
+
+#hour_list <- c(seq(from = 1, to = 145, by = 6))
+#seq_i <- c(seq(from = 1, to = 145-6, by = 6))
+#seq_f <- c(seq(from = 6, to = 145, by = 6))
+seq_time <- seq(as.Date("2000/1/1"), as.Date("2000/12/31"), "month")
+seq_months <- format(seq_time, format="%b")
+
+variavs <- c("IGPH",
+             "IDIR",
+             "IDIF",
+             "DIFGPH",
+             "Kt")
+
+#increase memmory to raster function:
+rasterOptions(maxmemory=5e+08,chunksize=5e+07)
+
+max_IGPH <- character(0)
+max_IDIR <- character(0)
+max_IDIF <- character(0)
+max_DIFGPH <- character(0)
+max_Kt <- character(0)
+IGPH <- c()
+IDIR <- c()
+IDIF <- c()
+DIFGPH <- c()
+Kt <- c()
+raster_IGPH <- c()
+raster_IDIR <- c()
+raster_IDIF <- c()
+raster_DIFGPH <- c()
+raster_Kt <- c()
 #ciclo abrir ficheiros
 for (i in 1:length(fileNames)){ 
       temp_nc <- nc$filename[i]
       temp_nc <- nc_open(temp_nc)
-      variav_rad <- ncvar_get(temp_nc, "SWDOWN")  
       
-      #test <- ncvar_get(temp_nc, "SWDOWN", start = c(1, 1, 114), count=c(-1, -1, 10))
-      #ou usar antes o ncdim_def
-      #ou ainda test[lat, long, time]
+      # retirar valores das variaveis
+      IGPH[[i]] <- ncvar_get(nc)[,,8] 
+      IDIR[[i]] <- ncvar_get(nc)[,,7]
+      IDIF[[i]] <- ncvar_get(nc)[,,6]  
+      DIFGPH[[i]] <- ncvar_get(nc)[,,5]  
+      Kt[[i]] <- ncvar_get(nc)[,,4] 
       
-      #list of output dates
-      times <- append(times, ncvar_get(temp_nc, names(nc$var)[1])[1])
+      # criar raster files
+      temp <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
+                     xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+      temp <- crop(temp, extent(land))
+      temp <- mask(temp, land)
+      raster_IGPH <- c(raster_IGPH, temp)
+      print(paste("mes", i, "- 20%"))
       
-      rad <- 0
-      count <- 0
-      start <- 0
-      #ciclo para is buscar valores de todos os 10 mnts
-      for (j in 1:144) {
-            #ciclo que so contabiliza espaco temporal com valores de radiacao > 0
-            if (min(variav_rad[,,j]) > 1) {
-                  
-                  rad <- rad + ncvar_get(temp_nc, names(nc$var)[12])[,,j]   #24/144*60 = 10mnts
-                  count <- count + 1
-                  
-            } else {
-                  
-                  print("nao ha sol nestes 10 minutos")
-                  start <- start + 1
-                  
-            }
-            print(paste(fileNames[i], "mnt", count + start))
-            
-      }
+      temp <- raster(mat_rot(mat_rot(mat_rot(t(IDIR[[i]])))), 
+                                 xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+      temp <- crop(temp, extent(land))
+      temp <- mask(temp, land)
+      raster_IDIR <- c(raster_IDIR, temp)
+      print(paste("mes", i, "- 40%"))
       
-      rad_h <- c()
-      for (l in 1:24) {
-            rad_h <- append(rad_h, median(ncvar_get(temp_nc, names(nc$var)[12])[,,seq_i[l]:seq_f[l]]))
-            #rad_h <- (rad_h[,,1] + rad_h[,,2] + rad_h[,,3] + rad_h[,,4] + rad_h[,,5] + rad_h[,,6])/6 # media dessa hora 
-            
-            #assign(paste("rad_h_", l, sep = ""), rad_h)
-            
-            count_h <- l
-            print(paste(fileNames[i], "hora", l))
-      }
+      temp <- raster(mat_rot(mat_rot(mat_rot(t(IDIF[[i]])))), 
+                                 xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+      temp <- crop(temp, extent(land))
+      temp <- mask(temp, land)
+      raster_IDIF <- c(raster_IDIF, temp)
+      print(paste("mes", i, "- 60%"))
       
-      #media diaria de contando somente horas com radiacao
-      rad = rad/count                 #W/m^2/day
-      #rad_h = rad /count          #W/m^2/h
+      temp <- raster(mat_rot(mat_rot(mat_rot(t(DIFGPH[[i]])))), 
+                                 xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+      temp <- crop(temp, extent(land))
+      temp <- mask(temp, land)
+      raster_DIFGPH <- c(raster_DIFGPH, temp)
+      print(paste("mes", i, "- 80%"))
+      
+      temp <- raster(mat_rot(mat_rot(mat_rot(t(Kt[[i]])))), 
+                                 xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+      temp <- crop(temp, extent(land))
+      temp <- mask(temp, land)
+      raster_Kt <- c(raster_Kt, temp)
+      print(paste("mes", i, "- 100%"))
       
       #retirar valor maximo de radiacao para grafico
-      max_graph <- append(max_graph, max(rad))
-      
-      #somar media das horas num vector
-      rad_hd <- rad_hd + rad_h
-      rad_hd_dataf[, format(as.POSIXct(strptime(times[i], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d")] <- rad_h
-      
-      #for (l in 1:24) {
-      #      assign(paste("rad_h_", l, "_", as.Date(times[i]), sep = ""), get(paste("rad_h_", l, sep = "")))
-      #}
-      
-      print(paste("numero de horas de sol =", dhours(count/6), ", primeiro raio de sol às", dhours(start/(6*2)), "hora solar"))
-      
-      assign(paste("rad_", as.Date(times[i]), sep = ""), rad)    
-      #assign(paste("rad_h", i, sep = ""), rad_h) 
+      max_IGPH[[i]] <- max(IGPH[[i]])
+      max_IDIR[[i]] <- max(IDIR[[i]])
+      max_IDIF[[i]] <- max(IDIF[[i]])
+      max_DIFGPH[[i]] <- max(DIFGPH[[i]], na.rm = T)
+      max_Kt[[i]] <- max(Kt[[i]], na.rm = T)
       
       nc_close(temp_nc)
       
 }
+rm(temp)
 
-#fazer média da rad das horas somadas dos dias em estudo
-rad_hd <- rad_hd/length(fileNames)
-rad_hd_dataf$media <- apply(rad_hd_dataf, 1, median)
+#IGPH <- array(unlist(IGPH), dim=c(ncols, nrows, length(fileNames)))
+#IDIR <- array(unlist(IDIR), dim=c(ncols, nrows, length(fileNames)))
+#IDIF <- array(unlist(IDIF), dim=c(ncols, nrows, length(fileNames)))
+#DIFGPH <- array(unlist(DIFGPH), dim=c(ncols, nrows, length(fileNames)))
+#Kt <- array(unlist(Kt), dim=c(ncols, nrows, length(fileNames)))
 
-nc_close(nc)
+IGPH <- matrix(IGPH)
+IDIR <- matrix(IDIR)
+IDIF <- matrix(IDIF)
+DIFGPH <- matrix(DIFGPH)
+Kt <- matrix(Kt)
 
-media_day <- c()
-#ciclo para fazer lista da rad media de todos os dias
-for (i in 1:length(times)) {
-      
-      variav_name <- paste(paste("rad_", as.Date(times[i]), sep = ""))
-      media_day <- append(media_day, median(get(variav_name)))
-      
-}
-
-time_series <- zoo(rad_hd_dataf)
-
-x_dias = seq(1, length(times), by= 1)
-x_horas = seq(1, 24, by= 1)
-#rad_hd_dataf$hora <- x_horas
-
-#gráfico
-graph_name_png <- paste("graphs/Rad_hour_TS_", format(as.POSIXct(strptime(times[1], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
-png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
-
-plot_time_ser <- autoplot(time_series, facets = NULL) + #ggplot
-      geom_line() +
-      labs (title = "Radiação Solar diária na Ilha da Madeira") +
-      scale_x_continuous (name = "Hora") +
-      scale_y_continuous (name = "Radiação [W/m^2]")
-plot(plot_time_ser)
-
-dev.off()
-
-
-graph_name_png <- paste("graphs/Rad_month_", format(as.POSIXct(strptime(times[1], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
-png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
-
-plot_day_med <- ggplot(data.frame(x_horas, rad_hd_dataf$media)) +
-      geom_line(aes(x = x_horas ,y = rad_hd_dataf$media), color = "blue") +
-      labs (title = "Radiação Solar diária na Ilha da Madeira") +
-      scale_x_continuous (name = "Hora") +
-      scale_y_continuous (name = "Radiação [W/m^2]")
-plot(plot_day_med)
-
-dev.off()
-
-
-graph_name_png <- paste("graphs/Rad_daily_", format(as.POSIXct(strptime(times[1], "%Y-%m-%d_%H:%M:%S")), "%Y-%m-%d"), ".png", sep = "")
-png(graph_name_png, width = 5950, height = 4500, units = "px", res = 500)
-
-plot_time_med <- ggplot(data.frame(x_dias,media_day)) +
-      geom_line(aes(x = x_dias ,y = media_day), color = "blue") +
-      geom_point(aes(x = x_dias ,y = media_day)) +
-      labs (title = "Radiação Solar diária na Ilha da Madeira") +
-      scale_x_continuous (name = "Nº do Dia") +
-      scale_y_continuous (name = "Radiação [W/m^2]")
-plot(plot_time_med)
-
-dev.off()
-
-
-#equacao rotacao de matriz
-matrix_rotate <- function(x)
-      t(apply(x, 2, rev))
-
-max_axis <- max(max_graph) + 50 #if not working do unlist
+#test_rst_stack <- stack(raster_IGPH)
+raster_IGPH <- rts(stack(raster_IGPH), seq_time[1:length(fileNames)])
+raster_IDIR <- rts(stack(raster_IDIR), seq_time[1:length(fileNames)])
+raster_IDIF <- rts(stack(raster_IDIF), seq_time[1:length(fileNames)])
+raster_DIFGPH <- rts(stack(raster_DIFGPH), seq_time[1:length(fileNames)])
+raster_Kt <- rts(stack(raster_Kt), seq_time[1:length(fileNames)])
 
 #ciclo gerar mapas e kmz
-for (i in 1:length(times)) {
+for (j in 1:length(variavs)) {
       
-      ##filled contour grafs
-      variav_name <- paste(paste("rad_", as.Date(times[i]), sep = ""))
-      
-      name_png = paste("Images/", "Rad_", as.Date(times[i]), ".png", sep = "")
-      png(name_png, width = 5950, height = 4500, units = "px", res = 500)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
-      
-      filled.contour(long, lat, get(variav_name), asp = 1, color = rgb.palette.rad, levels = seq(0, max_axis, 20), # nlevels = 400, #axes = F #(12), nlev=13,
-                     plot.title = title(main = as.expression(paste("Radiação Solar diária na Ilha da Madeira a", as.Date(times[i]))), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
-                     plot.axes = {axis(1); axis(2); contour(long, lat, hgt, add=TRUE, lwd=0.5, labcex=0.7, levels=c(10, seq(10, 500, 50), seq(500, 1900, 100)), drawlabels=  T, col = "grey30"); grid()},
-                     key.title = title(main =  as.expression(paste("[W/m^2]"))))
-      
-      #plot(getMap(resolution = "high"), add = T)
-      #contour(long, lat, hgt, add=TRUE, lwd=1, labcex=1, levels=0.99, drawlabels=FALSE, col="grey30")
-      
-      dev.off()
-
-      
-      ##kmz
-      test <-  raster(matrix_rotate(matrix_rotate(matrix_rotate(get(variav_name)))), 
-                      xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))   # + plot.axes={ works??????
-      #proj4string(test) <- CRS("+proj=longlat +datum=WGS84") #proj
-      
-      setwd("kmz")
-      system(paste("mkdir", paste("Rad_", as.Date(times[i]), sep = "")))
-      setwd(paste("Rad_", as.Date(times[i]), sep = ""))
-      
-      #KML(test, file = paste("Rad_", as.Date(times[i]), ".kmz", sep = ""), colour = rgb.palette.rad)
-      plotKML(obj=test, folder.name="RAD", file.name=paste("Rad_", as.Date(times[i]), ".kmz", sep = ""), colour_scale = rgb.palette.rad(400), open.kml = FALSE)
-      
-      setwd("../../")
-      
+      for (i in 1:length(seq_months)) {
+            ##filled contour grafs
+            variav_name <- paste0(variavs[j])
+            max_axis <- ceiling(as.numeric(max(get(paste0("max_", variavs[j])))))
+            
+            name_png = paste0("Images/", variavs[j], "_", seq_months[i], ".png")
+            png(name_png, width = ncols*14, height = nrows*14, units = "px", res = 500)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
+            
+            filled.contour(long, lat, t(get(variav_name)[[i]]), asp = 1, color = rgb.palette.rad, levels = seq(0, max_axis, max_axis/10), # nlevels = 400, #axes = F #(12), nlev=13,
+                           plot.title = title(main = as.expression(paste("Radiação Solar diária na Ilha da Madeira a", seq_months[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
+                           plot.axes = {axis(1); axis(2); 
+                                 contour(long, lat, t(hgt), add = T, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)));
+                                 grid(lty = 5, lwd = 0.5)},
+                           key.title = title(main = as.expression(paste("[W/m^2]"))))
+            
+            #plot(getMap(resolution = "high"), add = T)
+            #contour(long, lat, hgt, add=TRUE, lwd=1, labcex=1, levels=0.99, drawlabels=FALSE, col="grey30")
+            
+            dev.off()
+      }     
+            
+            ##kmz
+            #test <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
+            #                xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+            #proj4string(test) <- CRS("+proj=longlat +datum=WGS84") #proj
+            
+            #make contourline in kml
+            #cut(test, breaks= 10)
+            #rasterToPolygons(test, dissolve=T)
+            
+            #crop map land
+            #test <- crop(test, extent(land))
+            #test <- mask(test, land)
+            #image(test)
+            #filledContour(test)
+            
+            setwd("kmz")
+            #system(paste("mkdir", seq_months[i]))
+            #setwd(paste0(seq_months[i]))
+            system(paste("mkdir", variavs[j]))
+            setwd(paste0(variavs[j]))
+            
+            #KML(test, file = paste("Rad_", as.Date(times[i]), ".kmz", sep = ""), colour = rgb.palette.rad)
+            plotKML(obj = test, folder.name = variavs[j], file.name = paste0(variavs[j], "_", seq_months[i]), colour_scale = rgb.palette.rad(400), open.kml = FALSE)
+            
+            setwd("../../../")
+            
+       
 }
-
 
 #GIFs
 gif_name <- paste("GIFs/", "Rad_", as.Date(times[i]), ".gif", sep="")
