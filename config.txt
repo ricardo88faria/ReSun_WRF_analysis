@@ -2,16 +2,11 @@
 #Configure file with all necessary variables and configurations for script run well#
 ####################################################################################
 
-# TMY results
-RUN01 = 2014
-RUN02 = 2008
-RUN03 = 2008
-RUN04 = 2007
-RUN05 = 2009
-RUN06 = 2015
-RUN07 = 2008
-RUN08 = 2011
-RUN09 = 2010
-RUN10 = 2006
-RUN11 = 2014
-RUN12 = 2005
+# want to use correction from linear equations? 0=No 1=Yes
+# if yes which variables? complete corr_vars list below ("z", "lat", "lon", "Kt", "cleS", "iS", "cloS")
+corr = 1
+
+corr_vars = c("z",
+              "lat",
+              "lon",
+              "Kt")
