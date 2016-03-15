@@ -16,6 +16,8 @@ library(htmlwidgets)
 library(leaflet)
 library(devtools)
 library(plotly)
+library(parallel)
+
 
 #plotly to server username nad api key
 Sys.setenv("plotly_username" = "ricardo88faria")
@@ -39,7 +41,7 @@ source("matrix_rotation.R")
 
 
 #create folders
-system("mkdir kmz Images GIFs graphs GoogleMaps widgets")
+system("mkdir kml Images GIFs graphs GoogleMaps widgets")
 
 #cores dos graficos
 rgb.palette.rad <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
@@ -89,8 +91,6 @@ variavs <- c("IGPH",
              "DIFGPH",
              "Kt")
 
-#increase memmory to raster function:
-rasterOptions(maxmemory=5e+08,chunksize=5e+07)
 
 max_IGPH <- character(0)
 max_IDIR <- character(0)
@@ -108,6 +108,8 @@ raster_IDIF <- c()
 raster_DIFGPH <- c()
 raster_Kt <- c()
 #ciclo abrir ficheiros
+beginCluster( detectCores() -1)
+system.time(
 for (i in 1:length(fileNames)){ 
       temp_nc <- nc$filename[i]
       temp_nc <- nc_open(temp_nc)
@@ -119,7 +121,7 @@ for (i in 1:length(fileNames)){
       DIFGPH[[i]] <- ncvar_get(nc)[,,5]  
       Kt[[i]] <- ncvar_get(nc)[,,4] 
       
-      # criar raster files
+      # criar raster files cortados pelo contorno da topografia
       temp <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
                      xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
       temp <- crop(temp, extent(land))
@@ -128,28 +130,28 @@ for (i in 1:length(fileNames)){
       print(paste("mes", i, "- 20%"))
       
       temp <- raster(mat_rot(mat_rot(mat_rot(t(IDIR[[i]])))), 
-                                 xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+                     xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
       temp <- crop(temp, extent(land))
       temp <- mask(temp, land)
       raster_IDIR <- c(raster_IDIR, temp)
       print(paste("mes", i, "- 40%"))
       
       temp <- raster(mat_rot(mat_rot(mat_rot(t(IDIF[[i]])))), 
-                                 xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+                     xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
       temp <- crop(temp, extent(land))
       temp <- mask(temp, land)
       raster_IDIF <- c(raster_IDIF, temp)
       print(paste("mes", i, "- 60%"))
       
       temp <- raster(mat_rot(mat_rot(mat_rot(t(DIFGPH[[i]])))), 
-                                 xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+                     xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
       temp <- crop(temp, extent(land))
       temp <- mask(temp, land)
       raster_DIFGPH <- c(raster_DIFGPH, temp)
       print(paste("mes", i, "- 80%"))
       
       temp <- raster(mat_rot(mat_rot(mat_rot(t(Kt[[i]])))), 
-                                 xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+                     xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
       temp <- crop(temp, extent(land))
       temp <- mask(temp, land)
       raster_Kt <- c(raster_Kt, temp)
@@ -164,32 +166,68 @@ for (i in 1:length(fileNames)){
       
       nc_close(temp_nc)
       
-}
+})
+endCluster()
 rm(temp)
 
-#IGPH <- array(unlist(IGPH), dim=c(ncols, nrows, length(fileNames)))
-#IDIR <- array(unlist(IDIR), dim=c(ncols, nrows, length(fileNames)))
-#IDIF <- array(unlist(IDIF), dim=c(ncols, nrows, length(fileNames)))
-#DIFGPH <- array(unlist(DIFGPH), dim=c(ncols, nrows, length(fileNames)))
-#Kt <- array(unlist(Kt), dim=c(ncols, nrows, length(fileNames)))
+IGPH <- array(unlist(IGPH), dim=c(nrows, ncols, length(fileNames)))
+IDIR <- array(unlist(IDIR), dim=c(nrows, ncols, length(fileNames)))
+IDIF <- array(unlist(IDIF), dim=c(nrows, ncols, length(fileNames)))
+DIFGPH <- array(unlist(DIFGPH), dim=c(nrows, ncols, length(fileNames)))
+Kt <- array(unlist(Kt), dim=c(nrows, ncols, length(fileNames)))
 
-IGPH <- matrix(IGPH)
-IDIR <- matrix(IDIR)
-IDIF <- matrix(IDIF)
-DIFGPH <- matrix(DIFGPH)
-Kt <- matrix(Kt)
+#IGPH <- matrix(IGPH)
+#IDIR <- matrix(IDIR)
+#IDIF <- matrix(IDIF)
+#DIFGPH <- matrix(DIFGPH)
+#Kt <- matrix(Kt)
+
+
+pnts = data.frame(Name = 'Madeira',lat = lat[140] ,lon = long[300])
+#pnts = rbind(pnts,data.frame(Name = 'Tel Aviv ',lat = lat_min, lon = long_max))
+coordinates(pnts) <- ~lon + lat
+proj4string(pnts) <- CRS("+proj=longlat +datum=WGS84")
+
+t.start = format(as.Date('2010_01_01', "%Y_%m_%d "), "%Y-%m-%d %H:%M:%S")
+Times = seq(as.POSIXlt("2015-01-01"), as.POSIXlt("2015-02-28"), "months")
+
 
 #test_rst_stack <- stack(raster_IGPH)
-raster_IGPH <- rts(stack(raster_IGPH), seq_time[1:length(fileNames)])
-raster_IDIR <- rts(stack(raster_IDIR), seq_time[1:length(fileNames)])
-raster_IDIF <- rts(stack(raster_IDIF), seq_time[1:length(fileNames)])
-raster_DIFGPH <- rts(stack(raster_DIFGPH), seq_time[1:length(fileNames)])
-raster_Kt <- rts(stack(raster_Kt), seq_time[1:length(fileNames)])
+raster_IGPH <- brick(raster_IGPH)
+names(raster_IGPH) <- paste0("IGPH", seq_months[1:length(fileNames)])
+raster_IGPH <- new("RasterBrickTimeSeries", variable = "IGPH", 
+            sampled = pnts, rasters = raster_IGPH, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+
+raster_IDIR <- brick(raster_IDIR)
+names(raster_IDIR) <- paste0("IDIR", seq_months[1:length(fileNames)])
+raster_IDIR <- new("RasterBrickTimeSeries", variable = "IDIR", 
+            sampled = pnts, rasters = raster_IDIR, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+
+raster_IDIF <- brick(raster_IDIF)
+names(raster_IDIF) <- paste0("IDIF", seq_months[1:length(fileNames)])
+raster_IDIF <- new("RasterBrickTimeSeries", variable = "IDIF", 
+            sampled = pnts, rasters = raster_IDIF, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+
+raster_DIFGPH <- brick(raster_DIFGPH)
+names(raster_DIFGPH) <- paste0("DIFGPH", seq_months[1:length(fileNames)])
+raster_DIFGPH <- new("RasterBrickTimeSeries", variable = "DIFGPH", 
+            sampled = pnts, rasters = raster_DIFGPH, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+
+raster_Kt <- brick(raster_Kt)
+names(raster_Kt) <- paste0("Kt", seq_months[1:length(fileNames)])
+raster_Kt <- new("RasterBrickTimeSeries", variable = "Kt", 
+                     sampled = pnts, rasters = raster_Kt, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+
+#raster_IGPH <- rts(stack(raster_IGPH), seq_time[1:length(fileNames)])
+#raster_IDIR <- rts(stack(raster_IDIR), seq_time[1:length(fileNames)])
+#raster_IDIF <- rts(stack(raster_IDIF), seq_time[1:length(fileNames)])
+#raster_DIFGPH <- rts(stack(raster_DIFGPH), seq_time[1:length(fileNames)])
+#raster_Kt <- rts(stack(raster_Kt), seq_time[1:length(fileNames)])
 
 #ciclo gerar mapas e kmz
 for (j in 1:length(variavs)) {
       
-      for (i in 1:length(seq_months)) {
+      for (i in 1:length(fileNames)) {
             ##filled contour grafs
             variav_name <- paste0(variavs[j])
             max_axis <- ceiling(as.numeric(max(get(paste0("max_", variavs[j])))))
@@ -197,7 +235,7 @@ for (j in 1:length(variavs)) {
             name_png = paste0("Images/", variavs[j], "_", seq_months[i], ".png")
             png(name_png, width = ncols*14, height = nrows*14, units = "px", res = 500)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
             
-            filled.contour(long, lat, t(get(variav_name)[[i]]), asp = 1, color = rgb.palette.rad, levels = seq(0, max_axis, max_axis/10), # nlevels = 400, #axes = F #(12), nlev=13,
+            filled.contour(long, lat, t(get(variav_name)[,,i]), asp = 1, color = rgb.palette.rad, levels = seq(0, max_axis, max_axis/10), # nlevels = 400, #axes = F #(12), nlev=13,
                            plot.title = title(main = as.expression(paste("Radiação Solar diária na Ilha da Madeira a", seq_months[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
                            plot.axes = {axis(1); axis(2); 
                                  contour(long, lat, t(hgt), add = T, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)));
@@ -209,34 +247,36 @@ for (j in 1:length(variavs)) {
             
             dev.off()
       }     
-            
-            ##kmz
-            #test <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
-            #                xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
-            #proj4string(test) <- CRS("+proj=longlat +datum=WGS84") #proj
-            
-            #make contourline in kml
-            #cut(test, breaks= 10)
-            #rasterToPolygons(test, dissolve=T)
-            
-            #crop map land
-            #test <- crop(test, extent(land))
-            #test <- mask(test, land)
-            #image(test)
-            #filledContour(test)
-            
-            setwd("kmz")
-            #system(paste("mkdir", seq_months[i]))
-            #setwd(paste0(seq_months[i]))
-            system(paste("mkdir", variavs[j]))
-            setwd(paste0(variavs[j]))
-            
-            #KML(test, file = paste("Rad_", as.Date(times[i]), ".kmz", sep = ""), colour = rgb.palette.rad)
-            plotKML(obj = test, folder.name = variavs[j], file.name = paste0(variavs[j], "_", seq_months[i]), colour_scale = rgb.palette.rad(400), open.kml = FALSE)
-            
-            setwd("../../../")
-            
-       
+      
+      ##kmz
+      #test <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
+      #                xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+      #proj4string(test) <- CRS("+proj=longlat +datum=WGS84") #proj
+      
+      #make contourline in kml
+      #cut(test, breaks= 10)
+      #rasterToPolygons(test, dissolve=T)
+      
+      #crop map land
+      #test <- crop(test, extent(land))
+      #test <- mask(test, land)
+      #image(test)
+      #filledContour(test)
+      
+      variav_name <- paste0("raster_", variavs[j])
+      
+      setwd("kml")
+      #system(paste("mkdir", seq_months[i]))
+      #setwd(paste0(seq_months[i]))
+      system(paste("mkdir", variavs[j]))
+      setwd(paste0(variavs[j]))
+      
+      #KML(test, file = paste("Rad_", as.Date(times[i]), ".kmz", sep = ""), colour = rgb.palette.rad)
+      plotKML(obj = get(variav_name), folder.name = variavs[j], file.name = paste0(variavs[j], ".kml"),
+              iframe.width = ncols*14, iframe.height = nrows*14, colour_scale = rgb.palette.rad(400), open.kml = F)
+      
+      setwd("../../")
+
 }
 
 #GIFs
