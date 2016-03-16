@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 #packages:
-library(xlsx)
+#library(xlsx)
 library(lubridate)
 library(ncdf4)
 #library(R.matlab)
@@ -42,7 +42,7 @@ source("matrix_rotation.R")
 
 
 #create folders
-system("mkdir kml Images GIFs graphs GoogleMaps widgets")
+system("mkdir -p output/kml output/images")
 
 #cores dos graficos
 rgb.palette.rad <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
@@ -289,18 +289,18 @@ for (j in 1:length(variavs)) {
       for (i in 1:length(fileNames)) {
             ##filled contour grafs
             
-            if (corr == 1) {
-                  variav_name <- paste0(variavs[j], "_corr")
-            } else if (corr == 1) {
-                  variav_name <- paste0(variavs[j])
-            }
+            variav_name <- paste0(variavs[j])
             max_axis <- ceiling(as.numeric(max(get(paste0("max_", variavs[j])))))
             
-            name_png = paste0("Images/", variavs[j], "_", seq_months[i], ".png")
+            if (corr == 1) {
+                  name_png = paste0("output/images/", variavs[j], "_corr_", seq_months[i], ".png")
+            } else if (corr == 0) {
+                  name_png = paste0("output/images/", variavs[j], "_", seq_months[i], ".png")
+            }
             png(name_png, width = ncols*14, height = nrows*14, units = "px", res = 500)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
             
-            filled.contour(long, lat, t(get(variav_name)[,,i]), asp = 1, color = rgb.palette.rad, levels = seq(0, max_axis, max_axis/10), # nlevels = 400, #axes = F #(12), nlev=13,
-                           plot.title = title(main = as.expression(paste("Radiação Solar diária na Ilha da Madeira a", seq_months[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
+            filled.contour(long, lat, t(get(variav_name)[,,i]), asp = 1, color = rgb.palette.rad, levels = seq(0, max_axis, max_axis/15), # nlevels = 400, #axes = F #(12), nlev=13,
+                           plot.title = title(main = as.expression(paste("Média de", variavs[j], "na Ilha da Madeira a", seq_months[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
                            plot.axes = {axis(1); axis(2); 
                                  contour(long, lat, t(hgt), add = T, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)));
                                  grid(lty = 5, lwd = 0.5)},
@@ -329,14 +329,14 @@ for (j in 1:length(variavs)) {
       
       variav_name <- paste0("raster_", variavs[j])
       
-      setwd("kml")
+      setwd("output/kml/")
       #system(paste("mkdir", seq_months[i]))
       #setwd(paste0(seq_months[i]))
       
       if (corr == 1) {
             system(paste("mkdir", paste0(variavs[j], "_corr")))
             setwd(paste0(variavs[j], "_corr"))
-      } else if (corr == 1) {
+      } else if (corr == 0) {
             system(paste("mkdir", variavs[j]))
             setwd(paste0(variavs[j]))
       }
@@ -344,7 +344,7 @@ for (j in 1:length(variavs)) {
       plotKML(obj = get(variav_name), folder.name = variavs[j], file.name = paste0(variavs[j], ".kml"),
               iframe.width = ncols*14, iframe.height = nrows*14, colour_scale = rgb.palette.rad(400), open.kml = F)
       
-      setwd("../../")
+      setwd("../../../")
       
 }
 
