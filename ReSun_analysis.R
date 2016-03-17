@@ -300,7 +300,7 @@ for (j in 1:length(variavs)) {
             png(name_png, width = ncols*14, height = nrows*14, units = "px", res = 500)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
             
             filled.contour(long, lat, t(get(variav_name)[,,i]), asp = 1, color = rgb.palette.rad, levels = seq(0, max_axis, max_axis/15), # nlevels = 400, #axes = F #(12), nlev=13,
-                           plot.title = title(main = as.expression(paste("Média de", variavs[j], "na Ilha da Madeira a", seq_months[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
+                           plot.title = title(main = as.expression(paste("Média de", variavs[j], "na Ilha da Madeira em", seq_months[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
                            plot.axes = {axis(1); axis(2); 
                                  contour(long, lat, t(hgt), add = T, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)));
                                  grid(lty = 5, lwd = 0.5)},
