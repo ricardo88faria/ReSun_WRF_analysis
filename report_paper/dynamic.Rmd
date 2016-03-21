@@ -1,0 +1,67 @@
+---
+title: "Atlas da Radiação Solar da Ilha da Madeira"
+author: "Ricardo Faria"
+date: "18 de março de 2016"
+output:
+  html_document:
+    theme: paper
+    highlight: zenburn
+    code_folding: hide
+
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+This R Markdown document is made interactive using Shiny. Unlike the more traditional workflow of creating static reports, you can now create documents that allow your readers to change the assumptions underlying your analysis and see the results immediately. 
+
+To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+
+## Inputs and Outputs
+
+You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change.  This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
+
+```{r eruptions, echo=FALSE}
+load("data.RData")
+
+library(leaflet)
+library(raster)
+source("matrix_rotation.R")
+
+test <-  raster(mat_rot(mat_rot(mat_rot(t(IGPH_corr[,,1])))), 
+                      xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+
+pal.rad <- colorNumeric(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), values(test),
+                        na.color = "transparent")
+
+map <- leaflet(width = 1000, height = 750) %>% addTiles() %>% clearBounds() %>% 
+      addRasterImage(test, colors = pal.rad, opacity = 0.5) %>%
+      addLegend(pal = pal.rad, values = values(test),
+                title = "Radiação Solar")
+map
+```
+
+## Embedded Application
+
+It's also possible to embed an entire Shiny application within an R Markdown document using the `shinyAppDir` function. This example embeds a Shiny application located in another directory:
+
+```{r tabsets, echo=FALSE}
+shinyAppDir(
+  system.file("examples/06_tabsets", package = "shiny"),
+  options = list(
+    width = "100%", height = 550
+  )
+)
+```
+
+Note the use of the `height` parameter to determine how much vertical space the embedded application should occupy.
+
+You can also use the `shinyApp` function to define an application inline rather then in an external directory.
+
+In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
+
+
+

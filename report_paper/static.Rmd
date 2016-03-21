@@ -1,0 +1,105 @@
+---
+title: "Atlas da Radiação Solar da Ilha da Madeira"
+author: "Ricardo Faria"
+date: "18 de março de 2016"
+output:
+  pdf_document:
+    fig_caption: yes
+  html_document:
+    fig_caption: yes
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(kfigr)
+knitr::opts_chunk$set(echo = TRUE, dev = 'pdf', dpi=200)
+#knitr::opts_chunk$set(, dev = 'pdf')
+load("output/data.RData")
+```
+
+***
+## Introdução
+
+A realização do estudo do Atlas da Radiação Solar da Ilha da Madeira, teve iniciativa no estágio do Eng. Ricardo Faria no [LREC](<http://http://www.lrec.pt>). Este novo Atlas foi realizada com novos modelos matemáticos, [WRF](<http://www.wrf-model.org>) para modelação do clima e o ReSun^TM^ para modelar a distribuição do recurso solar, em plano horizontal, de modo a identificar de regiões com maior potencial solar, este último é usado com a colaboração da Empresa [Megajoule Inovação](<http://megajoule.pt>).
+
+***
+## Localização e Decrição
+
+A região em estudo é a ilha da Madeira, que é a principal ilha do arquipélago da Madeira, situado no oceano Atlântico, a sudoeste da costa portuguesa. Encontra-se entre as longitudes -17.3º a -16.64º e latitudes 32.6º a 32.9º. O ponto culminante situa-se no Pico Ruivo, 1.862 m de altura, a ilha é composta por um perímetro	179.3  km e área de 742.41  km^2^.
+O [LREC](<http://http://www.lrec.pt>) dispõe de uma vasta rede de Estações Meteorológicas Automáticas (EMA) distribuidas por toda a ilha, representada na `r figr("third-est_tab", link = TRUE, type="tab")`
+
+```{r ggmap, echo=FALSE, message=FALSE, fig.align='center', fig.cap = "posição das estações", anchor = "fig"}
+library(ggmap)
+library(RColorBrewer)
+
+data <- fortify(locs)
+lon_coords <- long[length(long)/2]
+lat_coords <- lat[length(lat)/2]
+colors <- brewer.pal(9, "BuGn")
+
+mapImage <- get_map(location = c(lon = lon_coords, lat = lat_coords),
+  color = "color",
+  source = "google",
+  maptype = "terrain",
+  zoom = 10)
+
+ggmap(mapImage) +
+  geom_point(aes(x = lon,
+      y = lat, color = loc),
+    data = data,
+    size = 3, show.legend = T,
+    alpha = 1) +
+labs(x = "Longitude",
+  y = "Latitude")
+```
+
+```{r est_tab, echo=FALSE, message=FALSE, anchor = "tab"}
+kable(data)
+```
+
+### Clima 
+Devido à sua latitude, a ilha da Madeira apresenta todas as características de ilha subtropical, caracteristicament a costa Norte apresenta um clima temperado, enquanto a Sul denota-se mais subtropical. Em certos pontos da costa sul, as temperaturas médias anuais atingem valores acima dos 20 graus celsius. A temperatura da água do mar, varia entre os 26 de verão e os 17 de inverno. Os ventos predominantes são de oeste a noroeste no inverno, e de nordeste no verão (alíseos). A precipitação anual varia de 500 mm no sudeste da ilha aos mais de 2000 mm nas encostas norte.
+
+### Topografia
+A ilha da Madeira apresenta uma topografia muito montanhosa, com profundos vales incrustados entre os picos e suas caraterísticas falésias.
+
+```{r topography, echo=FALSE, message=FALSE, fig.cap="topografia.", ref.label="fig2"}
+
+contour(long, lat, t(hgt), asp =1.1, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)))
+grid()
+
+```
+
+***
+## Metodologia
+
+De forma resumida descreve-se a metodologia a usar na elaboração do novo Atlas Solar do Arquipélago da Madeira:
+A estimativa do recurso solar será executada pelo código de simulação ReSun^TM^ (Pereira et al 2013) na sua variante de modelação, que se encontra capacitada para modelar os principais factores que afectam a magnitude do recurso solar, permitindo assim apurar a verdadeira valia da distribuição do recurso solar de uma forma mais detalhada. A modelação ReSun^TM^ faz uso de resultados das simulações meteorológicas WRF (Weather Research & Forecasting Model), num procedimento designado de downscaling, que engloba simulações idealizadas (céu limpo) nos pontos de uma malha de cálculo (mapeamento) ou pontos discretos de interesse (séries dados). São usadas técnicas de decomposição da radiação e métodos de interpolação por recurso a distância efetivas.
+As simulações a usar na obtenção do Atlas Solar serão realizadas para um período temporal equivalente a um ano meteorológico típico, selecionado a partir das Estações Meteorológicas Automáticas distribuídas pelo arquipélago da Madeira e com auxilio, se necessário, de dados provenientes de uma análise retrospetiva do programa MERRA (Modern-Era Retrospective Analysis For Research And Applications). Os dados das estações serão processados e analisados com o módulo QC (Solar Data Quality Check) do ReSunTM, onde se fará uma análise de consistência das medições de radiação global das estações. Será também realizada uma averiguação da performance do ReSunTM para um ano a selecionar a partir das medições locais.
+
+### Ano Meteorológico Típico
+
+Em termos gerais, a previsão da performance a longo prazo de qualquer sistema energético solar depende da existência de uma extensa e fiável base climática local. Teoricamente, esta análise energética deve ser realizada usando-se vários anos de dados climáticos, o que na maior parte das vezes não é possível dada a sua inexistência. Isto leva-nos a ter de recorrer a informação proveniente de bases climáticas de larga escala obtidas através de modelos de simulação avançados. Contudo, o uso de períodos extensões para simulação são computacionalmente exigentes, tornando as análises demasiado morosas e dispendiosas. A variabilidade inter anual das condições climáticas motiva a necessidade de se derivar uma base que represente as condições médias de longo prazo num único ano. Comummente isto é conseguido através de um ano meteorológico típico (Typical Meterological Year, TMY) constituído pela informação dos 12 meses mais representativos.
+O método estatístico utilizado para estimativa do TMY foi o de Filkenstein – Shafer (FS) devidamente implementado pela [Megajoule Inovação](<http://megajoule.pt>). O método baseia a seleção dos meses através de uma análise da frequência cumulativa da média diária dos valores de Radiação Global e Temperatura para cada um dos meses de um ano civil, Janeiro a Dezembro. De uma forma resumida, a escolha do ano para cada um dos meses resultará do que apresentar o menor somatório de erros diários de frequências cumulativas de um mês em especifico, de um dado ano, face ao longo termo do mês. De salientar que os erros obtidos para cada uma das variáveis incluídas na análise do TMY são sujeitas a uma ponderação utilizando-se pesos diferentes, 70% e 30%, radiação solar global e temperatura, respetivamente.
+
+```{r stations, echo=FALSE, message=FALSE}
+library(ggplot2)
+
+
+#print(data, type="html")
+
+#![Caption for the picture.](output/images/IGPH_corr_Jan.png)
+
+```
+
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+image(t(IGPH[,,1]), asp = .5)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
