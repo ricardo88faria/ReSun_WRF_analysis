@@ -302,13 +302,13 @@ Kt <- array(unlist(Kt), dim=c(nrows, ncols, length(fileNames)))
 #Kt <- matrix(Kt)
 
 
-pnts = data.frame(Name = 'Madeira',lat = lat[140] ,lon = long[300])
+pnts = data.frame(Name = 'Madeira',lat = lat[round(length(lat)/2)] ,lon = long[round(length(long)/2)])
 #pnts = rbind(pnts,data.frame(Name = 'Tel Aviv ',lat = lat_min, lon = long_max))
 coordinates(pnts) <- ~lon + lat
 proj4string(pnts) <- CRS("+proj=longlat +datum=WGS84")
 
 t.start = format(as.Date('2010_01_01', "%Y_%m_%d "), "%Y-%m-%d %H:%M:%S")
-Times = seq(as.POSIXlt(seq_time[1]), as.POSIXlt(seq_time[length(seq_time)]), "months")
+Times = seq(as.POSIXlt("2015-01-01"), as.POSIXlt("2015-12-31"), "months")
 
 
 # passar os rasters para RasterBrickTimeSeries class
@@ -405,7 +405,7 @@ for (j in 1:length(variavs)) {
       }
       #KML(test, file = paste("Rad_", as.Date(times[i]), ".kmz", sep = ""), colour = rgb.palette.rad)
       plotKML(obj = get(variav_name), folder.name = variavs[j], file.name = paste0(variavs[j], ".kml"),
-              iframe.width = ncols*14, iframe.height = nrows*14, colour_scale = rgb.palette.rad(400), open.kml = F)
+              colour_scale = rgb.palette.rad(400), open.kml = F) #iframe.width = ncols*14, iframe.height = nrows*14, 
       
       setwd("../../../")
       
