@@ -3,10 +3,8 @@
 ####################################################################################
 
 # want to use correction from linear equations? 0=No 1=Yes
-# if yes which variables? complete corr_vars list below ("z", "lat", "lon", "Kt", "cleS", "iS", "cloS")
+# if yes which variables?
 corr = 1
 
-corr_vars = c("z",
-              "lat",
-              "lon",
-              "Kt")
+#complete corr_vars list below ("z", "lat", "lon", "Kt", "cleS", "iS", "cloS")
+corr_vars = c("z")

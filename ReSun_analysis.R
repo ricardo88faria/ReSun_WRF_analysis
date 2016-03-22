@@ -48,7 +48,8 @@ system("mkdir -p output/kml output/images")
 rgb.palette.rad <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
 
 #open .nc
-fileNames <- Sys.glob("input/resun/*.nc")
+fileNames <- Sys.glob("input/resun/Results_*")
+#fileNames_tot <- Sys.glob("input/resun/Results_All*")
 nc <- nc_open(fileNames)
 names(nc$var)               #variav names
 
@@ -174,10 +175,9 @@ for (i in 1:length(fileNames)){
       IDIF[[i]] <- ncvar_get(nc)[,,6]  
       DIFGPH[[i]] <- ncvar_get(nc)[,,5]  
       
-      if (corr == 1) {
+      if (corr == 1 & length(fix_var) > 0) {
             
             for (j in 1:length(fix_var)) {
-                  
                   
                   m <- corr_values[c("m_D03"),c(fix_var[j])]
                   x <- corr_values[c("x_D03"),c(fix_var[j])]
@@ -188,6 +188,10 @@ for (i in 1:length(fileNames)){
                   #IGPH_corr[[i]] <- IGPH[[i]] + corr_fix[[paste0(fix_var[j],i)]] + corr_fix_fix
                   
             }
+            
+      } else if (corr == 1 & length(fix_var) == 0) {
+            
+            IGPH_corr[[i]] <- IGPH[[i]] * (1 - (corr_fix_fix)/100)
             
       }
       
@@ -304,7 +308,7 @@ coordinates(pnts) <- ~lon + lat
 proj4string(pnts) <- CRS("+proj=longlat +datum=WGS84")
 
 t.start = format(as.Date('2010_01_01', "%Y_%m_%d "), "%Y-%m-%d %H:%M:%S")
-Times = seq(as.POSIXlt("2015-01-01"), as.POSIXlt("2015-02-28"), "months")
+Times = seq(as.POSIXlt(seq_time[1]), as.POSIXlt(seq_time[length(seq_time)]), "months")
 
 
 # passar os rasters para RasterBrickTimeSeries class
