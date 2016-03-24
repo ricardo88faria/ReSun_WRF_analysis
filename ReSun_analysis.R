@@ -3,6 +3,7 @@
 #packages:
 #library(xlsx)
 library(lubridate)
+library(timeDate)
 library(ncdf4)
 #library(R.matlab)
 library(maptools)
@@ -46,6 +47,7 @@ system("mkdir -p output/kml output/images")
 
 #cores dos graficos
 rgb.palette.rad <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
+rgb.palette.ket <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
 
 #open .nc
 fileNames <- Sys.glob("input/resun/Results_*")
@@ -283,7 +285,7 @@ system.time(
 rm(temp)
 
 #test rasterbrick
-brickraster_kt <- brick(raster_Kt)
+#brickraster_kt <- brick(raster_Kt)
 
 
 IGPH <- array(unlist(IGPH), dim=c(nrows, ncols, length(fileNames)))
@@ -302,47 +304,52 @@ Kt <- array(unlist(Kt), dim=c(nrows, ncols, length(fileNames)))
 #Kt <- matrix(Kt)
 
 
-pnts = data.frame(Name = 'Madeira',lat = lat[round(length(lat)/2)] ,lon = long[round(length(long)/2)])
+pnts = data.frame(Name = 'Madeira', lat = lat[round(length(lat)/2)] ,lon = long[round(length(long)/2)])
 #pnts = rbind(pnts,data.frame(Name = 'Tel Aviv ',lat = lat_min, lon = long_max))
 coordinates(pnts) <- ~lon + lat
 proj4string(pnts) <- CRS("+proj=longlat +datum=WGS84")
 
-t.start = format(as.Date('2010_01_01', "%Y_%m_%d "), "%Y-%m-%d %H:%M:%S")
-Times = seq(as.POSIXlt("2015-01-01"), as.POSIXlt("2015-12-31"), "months")
+#sequencia de tempo inicial e final
+#t.start = format(as.Date('2010_01_01', "%Y_%m_%d "), "%Y-%m-%d %H:%M:%S")
+Times = seq(as.POSIXlt("2015-01-01"), as.POSIXlt("2015-02-28"), "months")
+#Times = seq(as.POSIXlt("2015-01-30"), as.POSIXlt("2015-12-30"), by = "month")
+#seq(as.Date("2010-02-01"), length=12, by="1 month") -1
 
+tS_i = as.POSIXct(timeSequence(from = "2015-01-01", to = "2015-12-31", by = "month"))
+tS_f = as.POSIXct(timeLastDayInMonth(tS_i))
 
 # passar os rasters para RasterBrickTimeSeries class
 raster_IGPH <- brick(raster_IGPH)
 names(raster_IGPH) <- paste0("IGPH", seq_months[1:length(fileNames)])
-raster_IGPH <- new("RasterBrickTimeSeries", variable = "IGPH", 
-                   sampled = pnts, rasters = raster_IGPH, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+#raster_IGPH_test <- new("RasterBrickTimeSeries", variable = "IGPH", 
+#                   sampled = pnts, rasters = raster_IGPH, TimeSpan.begin = tS_i[1:2], TimeSpan.end = tS_f[1:2])
 
 if (corr == 1) {
       raster_IGPH_corr <- brick(raster_IGPH_corr)
       names(raster_IGPH_corr) <- paste0("IGPH", seq_months[1:length(fileNames)])
-      raster_IGPH_corr <- new("RasterBrickTimeSeries", variable = "IGPH_corr", 
-                              sampled = pnts, rasters = raster_IGPH_corr, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+#      raster_IGPH_corr <- new("RasterBrickTimeSeries", variable = "IGPH_corr", 
+#                              sampled = pnts, rasters = raster_IGPH_corr, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 }
 
 raster_IDIR <- brick(raster_IDIR)
 names(raster_IDIR) <- paste0("IDIR", seq_months[1:length(fileNames)])
-raster_IDIR <- new("RasterBrickTimeSeries", variable = "IDIR", 
-                   sampled = pnts, rasters = raster_IDIR, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+#raster_IDIR <- new("RasterBrickTimeSeries", variable = "IDIR", 
+#                   sampled = pnts, rasters = raster_IDIR, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
 raster_IDIF <- brick(raster_IDIF)
 names(raster_IDIF) <- paste0("IDIF", seq_months[1:length(fileNames)])
-raster_IDIF <- new("RasterBrickTimeSeries", variable = "IDIF", 
-                   sampled = pnts, rasters = raster_IDIF, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+#raster_IDIF <- new("RasterBrickTimeSeries", variable = "IDIF", 
+#                   sampled = pnts, rasters = raster_IDIF, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
 raster_DIFGPH <- brick(raster_DIFGPH)
 names(raster_DIFGPH) <- paste0("DIFGPH", seq_months[1:length(fileNames)])
-raster_DIFGPH <- new("RasterBrickTimeSeries", variable = "DIFGPH", 
-                     sampled = pnts, rasters = raster_DIFGPH, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+#raster_DIFGPH <- new("RasterBrickTimeSeries", variable = "DIFGPH", 
+#                     sampled = pnts, rasters = raster_DIFGPH, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
 raster_Kt <- brick(raster_Kt)
 names(raster_Kt) <- paste0("Kt", seq_months[1:length(fileNames)])
-raster_Kt <- new("RasterBrickTimeSeries", variable = "Kt", 
-                 sampled = pnts, rasters = raster_Kt, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+#raster_Kt <- new("RasterBrickTimeSeries", variable = "Kt", 
+#                 sampled = pnts, rasters = raster_Kt, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
 #raster_IGPH <- rts(stack(raster_IGPH), seq_time[1:length(fileNames)])
 #raster_IDIR <- rts(stack(raster_IDIR), seq_time[1:length(fileNames)])
@@ -393,23 +400,22 @@ for (j in 1:length(variavs)) {
       variav_name <- paste0("raster_", variavs[j])
       
       setwd("output/kml/")
-      #system(paste("mkdir", seq_months[i]))
-      #setwd(paste0(seq_months[i]))
+
+      KML(get0(variav_name), file = paste0(variavs[j], ".kml"), time = c(tS_i, tS_f[length(tS_f)]), overwrite = T,
+          col = rgb.palette.rad(400), blur = 1)
       
-      if (corr == 1) {
-            system(paste("mkdir", paste0(variavs[j], "_corr")))
-            setwd(paste0(variavs[j], "_corr"))
-      } else if (corr == 0) {
-            system(paste("mkdir", variavs[j]))
-            setwd(paste0(variavs[j]))
-      }
+      #system(paste("mkdir", variavs[j]))
+      #setwd(paste0(variavs[j]))
+      
       #KML(test, file = paste("Rad_", as.Date(times[i]), ".kmz", sep = ""), colour = rgb.palette.rad)
-      plotKML(obj = get(variav_name), folder.name = variavs[j], file.name = paste0(variavs[j], ".kml"),
-              colour_scale = rgb.palette.rad(400), open.kml = F) #iframe.width = ncols*14, iframe.height = nrows*14, 
+      #plotKML(obj = get(variav_name), folder.name = variavs[j], file.name = paste0(variavs[j], ".kml"),
+      #        iframe.width = ncols*14, iframe.height = nrows*14, colour_scale = rgb.palette.rad(400), open.kml = F) 
       
-      setwd("../../../")
-      
+      #setwd("../../../")
+      setwd("../../")
 }
+#raster kml
+#KML(raster_IGPH, file='meuse_b2-0.kml', time =(seq(as.Date("2010-02-01"), length=2, by="1 month") -1), col = rgb.palette.rad(400), blur = 2)
 
 save.image(file = "output/data.RData")
 
