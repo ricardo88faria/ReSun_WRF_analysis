@@ -6,5 +6,8 @@
 # if yes which variables?
 corr = 1
 
-#complete corr_vars list below ("z", "lat", "lon", "Kt", "cleS", "iS", "cloS")
+# complete corr_vars list below ("z", "lat", "lon", "Kt", "cleS", "iS", "cloS")
 corr_vars = c("z")
+
+# do you want to crop raster image in kml (if yes, takes 5 times longer to crop)? 0=No 1=Yes
+crop = 1

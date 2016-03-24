@@ -19,6 +19,7 @@ library(leaflet)
 library(devtools)
 library(plotly)
 #library(parallel)
+library(RColorBrewer)
 
 
 #plotly to server username nad api key
@@ -47,7 +48,8 @@ system("mkdir -p output/kml output/images")
 
 #cores dos graficos
 rgb.palette.rad <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
-rgb.palette.ket <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
+rgb.palette.kt <- colorRampPalette(c(brewer.pal(9, "Blues")), space = "rgb")
+rgb.palette.DIFGPH <- colorRampPalette(c(brewer.pal(9, "YlOrRd")), space = "rgb")
 
 #open .nc
 fileNames <- Sys.glob("input/resun/Results_*")
@@ -237,45 +239,57 @@ system.time(
             
             temp <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
                            xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
-            temp <- crop(temp, extent(land))
-            temp <- mask(temp, land)
+            if (crop == 1) {
+                  temp <- crop(temp, extent(land))
+                  temp <- mask(temp, land)
+            }
             raster_IGPH <- c(raster_IGPH, temp)
             print(paste("mes", i, "- 00%"))
             
             if (corr == 1) {
                   temp <- raster(mat_rot(mat_rot(mat_rot(t(IGPH_corr[[i]])))), 
                                  xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
-                  temp <- crop(temp, extent(land))
-                  temp <- mask(temp, land)
+                  if (crop == 1) {
+                        temp <- crop(temp, extent(land))
+                        temp <- mask(temp, land)
+                  }
                   raster_IGPH_corr <- c(raster_IGPH_corr, temp)
                   print(paste("mes", i, "- 20%"))
             }
             
             temp <- raster(mat_rot(mat_rot(mat_rot(t(IDIR[[i]])))), 
                            xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
-            temp <- crop(temp, extent(land))
-            temp <- mask(temp, land)
+            if (crop == 1) {
+                  temp <- crop(temp, extent(land))
+                  temp <- mask(temp, land)
+            }
             raster_IDIR <- c(raster_IDIR, temp)
             print(paste("mes", i, "- 40%"))
             
             temp <- raster(mat_rot(mat_rot(mat_rot(t(IDIF[[i]])))), 
                            xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
-            temp <- crop(temp, extent(land))
-            temp <- mask(temp, land)
+            if (crop == 1) {
+                  temp <- crop(temp, extent(land))
+                  temp <- mask(temp, land)
+            }
             raster_IDIF <- c(raster_IDIF, temp)
             print(paste("mes", i, "- 60%"))
             
             temp <- raster(mat_rot(mat_rot(mat_rot(t(DIFGPH[[i]])))), 
                            xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
-            temp <- crop(temp, extent(land))
-            temp <- mask(temp, land)
+            if (crop == 1) {
+                  temp <- crop(temp, extent(land))
+                  temp <- mask(temp, land)
+            }
             raster_DIFGPH <- c(raster_DIFGPH, temp)
             print(paste("mes", i, "- 80%"))
             
             temp <- raster(mat_rot(mat_rot(mat_rot(t(Kt[[i]])))), 
                            xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
-            temp <- crop(temp, extent(land))
-            temp <- mask(temp, land)
+            if (crop == 1) {
+                  temp <- crop(temp, extent(land))
+                  temp <- mask(temp, land)
+            }
             raster_Kt <- c(raster_Kt, temp)
             print(paste("mes", i, "- 100%"))
             
@@ -303,7 +317,6 @@ Kt <- array(unlist(Kt), dim=c(nrows, ncols, length(fileNames)))
 #DIFGPH <- matrix(DIFGPH)
 #Kt <- matrix(Kt)
 
-
 pnts = data.frame(Name = 'Madeira', lat = lat[round(length(lat)/2)] ,lon = long[round(length(long)/2)])
 #pnts = rbind(pnts,data.frame(Name = 'Tel Aviv ',lat = lat_min, lon = long_max))
 coordinates(pnts) <- ~lon + lat
@@ -327,8 +340,8 @@ names(raster_IGPH) <- paste0("IGPH", seq_months[1:length(fileNames)])
 if (corr == 1) {
       raster_IGPH_corr <- brick(raster_IGPH_corr)
       names(raster_IGPH_corr) <- paste0("IGPH", seq_months[1:length(fileNames)])
-#      raster_IGPH_corr <- new("RasterBrickTimeSeries", variable = "IGPH_corr", 
-#                              sampled = pnts, rasters = raster_IGPH_corr, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
+      #      raster_IGPH_corr <- new("RasterBrickTimeSeries", variable = "IGPH_corr", 
+      #                              sampled = pnts, rasters = raster_IGPH_corr, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 }
 
 raster_IDIR <- brick(raster_IDIR)
@@ -360,16 +373,28 @@ names(raster_Kt) <- paste0("Kt", seq_months[1:length(fileNames)])
 #ciclo gerar mapas e kmz
 for (j in 1:length(variavs)) {
       
+      if (variavs[j] == "Kt") {
+            color <- rgb.palette.kt
+      } else if (variavs[j] == "DIFGPH") {
+            color <- rgb.palette.DIFGPH
+      } else {
+            color <- rgb.palette.rad
+      }
+      
+      pb <- txtProgressBar(min = 0, max = length(fileNames), style = 3, title = paste0(variavs))
       for (i in 1:length(fileNames)) {
             ##filled contour grafs
             
             variav_name <- paste0(variavs[j])
+            
+            #print(paste0("image variavel:", variav_name, " - mes:", i))
+            
             max_axis <- ceiling(as.numeric(max(get(paste0("max_", variavs[j])))))
             
             name_png = paste0("output/images/", variavs[j], "_", seq_months[i], ".png")
             png(name_png, width = ncols*7, height = nrows*7, units = "px", res = 250)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
             
-            filled.contour(long, lat, t(get(variav_name)[,,i]),  color = rgb.palette.rad, levels = seq(0, max_axis, max_axis/15), # nlevels = 400, #axes = F #(12), nlev=13,
+            filled.contour(long, lat, t(get(variav_name)[,,i]),  color = color, levels = seq(0, max_axis, max_axis/15), # nlevels = 400, #axes = F #(12), nlev=13,
                            plot.title = title(main = as.expression(paste("Média de", variavs[j], "na Ilha da Madeira em", seq_months[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
                            plot.axes = {axis(1); axis(2); 
                                  contour(long, lat, t(hgt), add = T, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)));
@@ -380,7 +405,10 @@ for (j in 1:length(variavs)) {
             #contour(long, lat, hgt, add=TRUE, lwd=1, labcex=1, levels=0.99, drawlabels=FALSE, col="grey30")
             
             dev.off()
+            
+            setTxtProgressBar(pb, i)
       }     
+      close(pb)
       
       ##kmz
       #test <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
@@ -399,10 +427,12 @@ for (j in 1:length(variavs)) {
       
       variav_name <- paste0("raster_", variavs[j])
       
+      print(paste0("kml variavel:", variav_name))
+      
       setwd("output/kml/")
-
-      KML(get0(variav_name), file = paste0(variavs[j], ".kml"), time = c(tS_i, tS_f[length(tS_f)]), overwrite = T,
-          col = rgb.palette.rad(400), blur = 1)
+      
+      KML(get0(variav_name), file = paste0(variavs[j], ".kml"), time = c(tS_i, tS_i[1]), overwrite = T, #[length(tS_f)]
+          col = color(20), blur = 1)
       
       #system(paste("mkdir", variavs[j]))
       #setwd(paste0(variavs[j]))
