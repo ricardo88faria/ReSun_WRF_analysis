@@ -44,7 +44,7 @@ source("matrix_rotation.R")
 
 
 #create folders
-system("mkdir -p output/kml output/images")
+system("mkdir -p output/kml output/images output/nc")
 
 #cores dos graficos
 rgb.palette.rad <- colorRampPalette(c("lightcyan", "yellow2", "orange", "tomato1", "violetred4", "violetred", "purple"), space = "rgb")
@@ -333,34 +333,34 @@ tS_f = as.POSIXct(timeLastDayInMonth(tS_i))
 
 # passar os rasters para RasterBrickTimeSeries class
 raster_IGPH <- brick(raster_IGPH)
-names(raster_IGPH) <- paste0("IGPH", seq_months[1:length(fileNames)])
+names(raster_IGPH) <- paste0("IGPH_", seq_months[1:length(fileNames)])
 #raster_IGPH_test <- new("RasterBrickTimeSeries", variable = "IGPH", 
-#                   sampled = pnts, rasters = raster_IGPH, TimeSpan.begin = tS_i[1:2], TimeSpan.end = tS_f[1:2])
+#                   sampled = pnts, rasters = raster_IGPH, TimeSpan.begin = tS_i, TimeSpan.end = tS_f)
 
 if (corr == 1) {
       raster_IGPH_corr <- brick(raster_IGPH_corr)
-      names(raster_IGPH_corr) <- paste0("IGPH", seq_months[1:length(fileNames)])
+      names(raster_IGPH_corr) <- paste0("IGPH_", seq_months[1:length(fileNames)])
       #      raster_IGPH_corr <- new("RasterBrickTimeSeries", variable = "IGPH_corr", 
       #                              sampled = pnts, rasters = raster_IGPH_corr, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 }
 
 raster_IDIR <- brick(raster_IDIR)
-names(raster_IDIR) <- paste0("IDIR", seq_months[1:length(fileNames)])
+names(raster_IDIR) <- paste0("IDIR_", seq_months[1:length(fileNames)])
 #raster_IDIR <- new("RasterBrickTimeSeries", variable = "IDIR", 
 #                   sampled = pnts, rasters = raster_IDIR, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
 raster_IDIF <- brick(raster_IDIF)
-names(raster_IDIF) <- paste0("IDIF", seq_months[1:length(fileNames)])
+names(raster_IDIF) <- paste0("IDIF_", seq_months[1:length(fileNames)])
 #raster_IDIF <- new("RasterBrickTimeSeries", variable = "IDIF", 
 #                   sampled = pnts, rasters = raster_IDIF, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
 raster_DIFGPH <- brick(raster_DIFGPH)
-names(raster_DIFGPH) <- paste0("DIFGPH", seq_months[1:length(fileNames)])
+names(raster_DIFGPH) <- paste0("DIFGPH_", seq_months[1:length(fileNames)])
 #raster_DIFGPH <- new("RasterBrickTimeSeries", variable = "DIFGPH", 
 #                     sampled = pnts, rasters = raster_DIFGPH, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
 raster_Kt <- brick(raster_Kt)
-names(raster_Kt) <- paste0("Kt", seq_months[1:length(fileNames)])
+names(raster_Kt) <- paste0("Kt_", seq_months[1:length(fileNames)])
 #raster_Kt <- new("RasterBrickTimeSeries", variable = "Kt", 
 #                 sampled = pnts, rasters = raster_Kt, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
@@ -381,7 +381,7 @@ for (j in 1:length(variavs)) {
             color <- rgb.palette.rad
       }
       
-      pb <- txtProgressBar(min = 0, max = length(fileNames), style = 3, title = paste0(variavs))
+      pb <- txtProgressBar(min = 0, max = length(fileNames), style = 3, title = paste0(variavs[j]))
       for (i in 1:length(fileNames)) {
             ##filled contour grafs
             
@@ -431,8 +431,9 @@ for (j in 1:length(variavs)) {
       
       setwd("output/kml/")
       
-      KML(get0(variav_name), file = paste0(variavs[j], ".kml"), time = c(tS_i, tS_i[1]), overwrite = T, #[length(tS_f)]
+      KML(get0(variav_name), file = paste0(variavs[j], ".kml"), time = c(tS_i, tS_i[length(tS_i)]), overwrite = T, #[length(tS_f)]
           col = color(20), blur = 1)
+      kml_layer.Raster(get0(variav_name), subfolder.name = paste(class(get0(variav_name))), TimeSpan.begin = tS_i, TimeSpan.end = tS_f, colour = color(20))
       
       #system(paste("mkdir", variavs[j]))
       #setwd(paste0(variavs[j]))
@@ -448,6 +449,82 @@ for (j in 1:length(variavs)) {
 #KML(raster_IGPH, file='meuse_b2-0.kml', time =(seq(as.Date("2010-02-01"), length=2, by="1 month") -1), col = rgb.palette.rad(400), blur = 2)
 
 save.image(file = "output/data.RData")
+
+if (nc_out == 1) {
+      
+      for (i in 1:length(fileNames)) {
+            
+            IGPH[,,i] <- t(IGPH[,,i])
+            if (corr == 1) {
+                  IGPH_corr[,,i] <- t(IGPH_corr[,,i])
+            }
+            IDIR[,,i] <- t(IDIR[,,i])
+            IDIF[,,i] <- t(IDIF[,,i])
+            DIFGPH[,,i] <- t(DIFGPH[,,i])
+            Kt[,,i] <- t(Kt[,,i])
+      }
+      
+      #define dimensions
+      nc_londim <- ncdim_def(name = "lon", units = "degrees_east", vals = long) 
+      nc_latdim <- ncdim_def(name = "lat", units = "degrees_north", vals = lat) 
+      nc_monthdim <- ncdim_def(name = "month", units = "month_year", vals = as.numeric(format(tS_i, "%m")))
+      
+      #define variables
+      nc_hgt <- ncvar_def(name = "hgt", units = "m", dim = list(nc_londim, nc_latdim), prec = "single")
+      
+      nc_IGPH <- ncvar_def(name = "IGPH", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
+      
+      if (corr == 1) {
+            
+            nc_IGPH_corr <- ncvar_def(name = "IGPH_corr", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
+            
+      }
+      nc_IDIR <- ncvar_def(name = "IDIR", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
+      nc_IDIF <- ncvar_def(name = "IDIF", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
+      nc_DIFGPH <- ncvar_def(name = "DIFGPH", units = "%", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
+      nc_Kt <- ncvar_def(name = "Kt", units = "", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
+      
+      #create netCDF file and put arrays
+      nc_name <- paste("output/nc/ReSun_", local, ".nc", sep = "")
+      if (corr == 1) {
+            
+            ncout <- nc_create(filename = nc_name, vars = list(nc_hgt, nc_IGPH, nc_IGPH_corr, nc_IDIR, nc_IDIF, nc_DIFGPH, nc_Kt), force_v4 = T, verbose = F)
+            
+      } else {
+            
+            ncout <- nc_create(filename = nc_name, vars = list(nc_hgt, nc_IGPH, nc_IDIR, nc_IDIF, nc_DIFGPH, nc_Kt), force_v4 = T, verbose = F)
+            
+      }
+      
+      #put variables
+      ncvar_put(ncout, nc_hgt, t(hgt))
+      
+      ncvar_put(ncout, nc_IGPH, IGPH)
+      
+      if (corr == 1) {
+
+            ncvar_put(ncout, nc_IGPH_corr, IGPH_corr)
+            
+      }
+      ncvar_put(ncout, nc_IDIR, IDIR)
+      ncvar_put(ncout, nc_IDIF, IDIF)
+      ncvar_put(ncout, nc_DIFGPH, DIFGPH)
+      ncvar_put(ncout, nc_Kt, Kt)
+      
+      #put additional attributes into dimension and data variables
+      ncatt_put(ncout, "lon", "axis", "X") #,verbose=FALSE) #,definemode=FALSE)
+      ncatt_put(ncout, "lat", "axis", "Y")
+      ncatt_put(ncout, "month", "axis", "T")
+      #ncatt_put(ncout, "hour", "axis", "T")
+      
+      #add global attributes
+      #ncatt_put(ncout,0,"title","Shadow median per Julian day")
+      name <- paste("Created by: Ricardo Faria", Sys.time(), "Shadow median per Julian day", sep=", ")
+      ncatt_put(ncout, 0, "title", name)
+      
+      nc_close(ncout)
+      
+}
 
 t <- (Sys.time() - t)
 
