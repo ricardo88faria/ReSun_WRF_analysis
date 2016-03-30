@@ -381,70 +381,76 @@ for (j in 1:length(variavs)) {
             color <- rgb.palette.rad
       }
       
-      pb <- txtProgressBar(min = 0, max = length(fileNames), style = 3, title = paste0(variavs[j]))
-      for (i in 1:length(fileNames)) {
-            ##filled contour grafs
+      if (png_out == 1) {
             
-            variav_name <- paste0(variavs[j])
+            pb <- txtProgressBar(min = 0, max = length(fileNames), style = 3, title = paste0(variavs[j]))
+            for (i in 1:length(fileNames)) {
+                  ##filled contour grafs
+                  
+                  variav_name <- paste0(variavs[j])
+                  
+                  #print(paste0("image variavel:", variav_name, " - mes:", i))
+                  
+                  max_axis <- ceiling(as.numeric(max(get(paste0("max_", variavs[j])))))
+                  
+                  name_png = paste0("output/images/", variavs[j], "_", seq_months[i], ".png")
+                  png(name_png, width = ncols*7, height = nrows*7, units = "px", res = 250)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
+                  
+                  filled.contour(long, lat, t(get(variav_name)[,,i]),  color = color, levels = seq(0, max_axis, max_axis/15), # nlevels = 400, #axes = F #(12), nlev=13,
+                                 plot.title = title(main = as.expression(paste("Média de", variavs[j], "na Ilha da Madeira em", seq_months[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
+                                 plot.axes = {axis(1); axis(2); 
+                                       contour(long, lat, t(hgt), add = T, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)));
+                                       grid(lty = 5, lwd = 0.5)},
+                                 key.title = title(main = as.expression(paste("[W/m^2]"))))
+                  
+                  #plot(getMap(resolution = "high"), add = T)
+                  #contour(long, lat, hgt, add=TRUE, lwd=1, labcex=1, levels=0.99, drawlabels=FALSE, col="grey30")
+                  
+                  dev.off()
+                  
+                  setTxtProgressBar(pb, i)
+            }     
+            close(pb)
             
-            #print(paste0("image variavel:", variav_name, " - mes:", i))
+      }
+      
+      if (kml_out == 1) {
+            ##kmz
+            #test <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
+            #                xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+            #proj4string(test) <- CRS("+proj=longlat +datum=WGS84") #proj
             
-            max_axis <- ceiling(as.numeric(max(get(paste0("max_", variavs[j])))))
+            #make contourline in kml
+            #cut(test, breaks= 10)
+            #rasterToPolygons(test, dissolve=T)
             
-            name_png = paste0("output/images/", variavs[j], "_", seq_months[i], ".png")
-            png(name_png, width = ncols*7, height = nrows*7, units = "px", res = 250)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
+            #crop map land
+            #test <- crop(test, extent(land))
+            #test <- mask(test, land)
+            #image(test)
+            #filledContour(test)
             
-            filled.contour(long, lat, t(get(variav_name)[,,i]),  color = color, levels = seq(0, max_axis, max_axis/15), # nlevels = 400, #axes = F #(12), nlev=13,
-                           plot.title = title(main = as.expression(paste("Média de", variavs[j], "na Ilha da Madeira em", seq_months[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
-                           plot.axes = {axis(1); axis(2); 
-                                 contour(long, lat, t(hgt), add = T, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)));
-                                 grid(lty = 5, lwd = 0.5)},
-                           key.title = title(main = as.expression(paste("[W/m^2]"))))
+            variav_name <- paste0("raster_", variavs[j])
             
-            #plot(getMap(resolution = "high"), add = T)
-            #contour(long, lat, hgt, add=TRUE, lwd=1, labcex=1, levels=0.99, drawlabels=FALSE, col="grey30")
+            print(paste0("kml variavel:", variav_name))
             
-            dev.off()
+            setwd("output/kml/")
             
-            setTxtProgressBar(pb, i)
-      }     
-      close(pb)
-      
-      ##kmz
-      #test <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
-      #                xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
-      #proj4string(test) <- CRS("+proj=longlat +datum=WGS84") #proj
-      
-      #make contourline in kml
-      #cut(test, breaks= 10)
-      #rasterToPolygons(test, dissolve=T)
-      
-      #crop map land
-      #test <- crop(test, extent(land))
-      #test <- mask(test, land)
-      #image(test)
-      #filledContour(test)
-      
-      variav_name <- paste0("raster_", variavs[j])
-      
-      print(paste0("kml variavel:", variav_name))
-      
-      setwd("output/kml/")
-      
-      KML(get0(variav_name), file = paste0(variavs[j], ".kml"), time = c(tS_i, tS_i[length(tS_i)]), overwrite = T, #[length(tS_f)]
-          col = color(20), blur = 1)
-      #kml_layer.Raster(get0(variav_name), subfolder.name = paste(class(get0(variav_name))), TimeSpan.begin = tS_i, TimeSpan.end = tS_f, colour = color(20))
-      #kml_layer.RasterBrick(get0(variav_name), plot.legend = TRUE, subfolder.name = paste(class(get0(variav_name))), dtime = tS_i, colour = color(20))
+            KML(get0(variav_name), file = paste0(variavs[j], ".kml"), time = c(tS_i, tS_i[length(tS_i)]), overwrite = T, #[length(tS_f)]
+                col = color(20), blur = 1)
+            #kml_layer.Raster(get0(variav_name), subfolder.name = paste(class(get0(variav_name))), TimeSpan.begin = tS_i, TimeSpan.end = tS_f, colour = color(20))
+            #kml_layer.RasterBrick(get0(variav_name), plot.legend = TRUE, subfolder.name = paste(class(get0(variav_name))), dtime = tS_i, colour = color(20))
             
-      #system(paste("mkdir", variavs[j]))
-      #setwd(paste0(variavs[j]))
-      
-      #KML(test, file = paste("Rad_", as.Date(times[i]), ".kmz", sep = ""), colour = rgb.palette.rad)
-      #plotKML(obj = get(variav_name), folder.name = variavs[j], file.name = paste0(variavs[j], ".kml"),
-      #        iframe.width = ncols*14, iframe.height = nrows*14, colour_scale = rgb.palette.rad(400), open.kml = F) 
-      
-      #setwd("../../../")
-      setwd("../../")
+            #system(paste("mkdir", variavs[j]))
+            #setwd(paste0(variavs[j]))
+            
+            #KML(test, file = paste("Rad_", as.Date(times[i]), ".kmz", sep = ""), colour = rgb.palette.rad)
+            #plotKML(obj = get(variav_name), folder.name = variavs[j], file.name = paste0(variavs[j], ".kml"),
+            #        iframe.width = ncols*14, iframe.height = nrows*14, colour_scale = rgb.palette.rad(400), open.kml = F) 
+            
+            #setwd("../../../")
+            setwd("../../")
+      }
 }
 #raster kml
 #KML(raster_IGPH, file='meuse_b2-0.kml', time =(seq(as.Date("2010-02-01"), length=2, by="1 month") -1), col = rgb.palette.rad(400), blur = 2)
@@ -481,6 +487,7 @@ if (nc_out == 1) {
             nc_IGPH_corr <- ncvar_def(name = "IGPH_corr", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
             
       }
+      
       nc_IDIR <- ncvar_def(name = "IDIR", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
       nc_IDIF <- ncvar_def(name = "IDIF", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
       nc_DIFGPH <- ncvar_def(name = "DIFGPH", units = "%", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
@@ -504,7 +511,7 @@ if (nc_out == 1) {
       ncvar_put(ncout, nc_IGPH, IGPH)
       
       if (corr == 1) {
-
+            
             ncvar_put(ncout, nc_IGPH_corr, IGPH_corr)
             
       }
