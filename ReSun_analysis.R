@@ -188,8 +188,8 @@ for (i in 1:length(fileNames)){
                   
                   corr_fix[[paste0(fix_var[j],i)]] <- x + m*Kt[[i]]
                   
-                  IGPH_corr[[i]] <- IGPH[[i]] * (1 - (corr_fix[[paste0(fix_var[j],i)]] + corr_fix_fix)/100)
-                  #IGPH_corr[[i]] <- IGPH[[i]] + corr_fix[[paste0(fix_var[j],i)]] + corr_fix_fix
+                  #IGPH_corr[[i]] <- IGPH[[i]] * (1 - (corr_fix[[paste0(fix_var[j],i)]] + corr_fix_fix)/100)
+                  IGPH_corr[[i]] <- IGPH[[i]] + corr_fix[[paste0(fix_var[j],i)]] + corr_fix_fix
                   
             }
             
@@ -433,8 +433,9 @@ for (j in 1:length(variavs)) {
       
       KML(get0(variav_name), file = paste0(variavs[j], ".kml"), time = c(tS_i, tS_i[length(tS_i)]), overwrite = T, #[length(tS_f)]
           col = color(20), blur = 1)
-      kml_layer.Raster(get0(variav_name), subfolder.name = paste(class(get0(variav_name))), TimeSpan.begin = tS_i, TimeSpan.end = tS_f, colour = color(20))
-      
+      #kml_layer.Raster(get0(variav_name), subfolder.name = paste(class(get0(variav_name))), TimeSpan.begin = tS_i, TimeSpan.end = tS_f, colour = color(20))
+      #kml_layer.RasterBrick(get0(variav_name), plot.legend = TRUE, subfolder.name = paste(class(get0(variav_name))), dtime = tS_i, colour = color(20))
+            
       #system(paste("mkdir", variavs[j]))
       #setwd(paste0(variavs[j]))
       
@@ -452,6 +453,7 @@ save.image(file = "output/data.RData")
 
 if (nc_out == 1) {
       
+      #transpose variavs matrixes
       for (i in 1:length(fileNames)) {
             
             IGPH[,,i] <- t(IGPH[,,i])
@@ -519,7 +521,7 @@ if (nc_out == 1) {
       
       #add global attributes
       #ncatt_put(ncout,0,"title","Shadow median per Julian day")
-      name <- paste("Created by: Ricardo Faria", Sys.time(), "Shadow median per Julian day", sep=", ")
+      name <- paste("Created by: Ricardo Faria", Sys.time(), "ReSun results", sep=", ")
       ncatt_put(ncout, 0, "title", name)
       
       nc_close(ncout)
