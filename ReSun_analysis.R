@@ -153,6 +153,8 @@ if (corr == 1) {
 
 corr_fix_fix <- Reduce("+", corr_fix)
 
+message("reading ReSun netcdf files, if coor=1 applying  correction")
+
 max_IGPH <- character(0)
 max_IGPH_corr <- character(0)
 max_IDIR <- character(0)
@@ -167,19 +169,21 @@ DIFGPH <- c()
 Kt <- c()
 fix_var <- intersect(corr_vars, c("Kt", "cleS", "iS", "cloS"))
 d <- c()
+months_name <- c("tot", seq_months)
 # ciclo abrir ficheiros e aplicar correcao variavel kt - varia em funcao do tempo
+# retirar valores das variaveis
 for (i in 1:length(fileNames)){ 
       temp_nc <- nc$filename[i]
       temp_nc <- nc_open(temp_nc)
       
       # retirar valores das variaveis
-      IGPH[[i]] <- ncvar_get(nc)[,,8] 
-      Kt[[i]] <-ncvar_get(nc)[,,4]
-      IDIR[[i]] <- ncvar_get(nc)[,,7]
-      IDIF[[i]] <- ncvar_get(nc)[,,6]  
-      DIFGPH[[i]] <- ncvar_get(nc)[,,5]  
+      IGPH[[i]] <- ncvar_get(temp_nc)[,,8] 
+      Kt[[i]] <-ncvar_get(temp_nc)[,,4]
+      IDIR[[i]] <- ncvar_get(temp_nc)[,,7]
+      IDIF[[i]] <- ncvar_get(temp_nc)[,,6]  
+      DIFGPH[[i]] <- ncvar_get(temp_nc)[,,5]  
       
-      if (corr == 1 & length(fix_var) > 0) {
+      if (i == 1 & corr == 1 & length(fix_var) > 0) {
             
             for (j in 1:length(fix_var)) {
                   
@@ -188,12 +192,12 @@ for (i in 1:length(fileNames)){
                   
                   corr_fix[[paste0(fix_var[j],i)]] <- x + m*Kt[[i]]
                   
-                  #IGPH_corr[[i]] <- IGPH[[i]] * (1 - (corr_fix[[paste0(fix_var[j],i)]] + corr_fix_fix)/100)
-                  IGPH_corr[[i]] <- IGPH[[i]] + corr_fix[[paste0(fix_var[j],i)]] + corr_fix_fix
+                  IGPH_corr[[i]] <- IGPH[[i]] * (1 - (corr_fix[[paste0(fix_var[j],i)]] + corr_fix_fix)/100)
+                  #IGPH_corr[[i]] <- IGPH[[i]] + corr_fix[[paste0(fix_var[j],i)]] + corr_fix_fix
                   
             }
             
-      } else if (corr == 1 & length(fix_var) == 0) {
+      } else if (i == 1 & corr == 1 & length(fix_var) == 0) {
             
             IGPH_corr[[i]] <- IGPH[[i]] * (1 - (corr_fix_fix)/100)
             
@@ -201,13 +205,15 @@ for (i in 1:length(fileNames)){
       
       for (l in 1:length(lat_index)) {
             
-            if (corr == 1) {    
+            d <- rbind(d ,c(Location = levels(locs$loc)[l], value = IGPH[[1]][lat_index[l],long_index[l]], Month = months_name[1]))
+            
+            if (i == 1 & corr == 1) {    
                   
-                  d <- rbind(d ,c(Location = levels(locs$loc)[l], value = IGPH_corr[[i]][lat_index[l],long_index[l]], Month = seq_months[i]))
+                  d <- rbind(d ,c(Location = levels(locs$loc)[l], value = IGPH_corr[[i]][lat_index[l],long_index[l]], Month = "tot_corr"))
                   
-            } else {    
+            } else if (i >= 2 & i <= length(fileNames)){ #if (i >= 2 & i <= length(fileNames))
                   
-                  d <- rbind(d ,c(Location = levels(locs$loc)[l], value = IGPH[[i]][lat_index[l],long_index[l]], Month = seq_months[i]))
+                  d <- rbind(d ,c(Location = levels(locs$loc)[l], value = IGPH[[i]][lat_index[l],long_index[l]], Month = months_name[i]))
                   
             }
             
@@ -216,7 +222,11 @@ for (i in 1:length(fileNames)){
       
       #retirar valor maximo de radiacao para grafico
       max_IGPH[[i]] <- max(IGPH[[i]])
-      max_IGPH_corr[[i]] <- max(IGPH_corr[[i]])
+      
+      if (i == 1 & corr == 1) {
+            max_IGPH_corr[[i]] <- max(IGPH_corr[[i]])
+      }
+      
       max_IDIR[[i]] <- max(IDIR[[i]])
       max_IDIF[[i]] <- max(IDIF[[i]])
       max_DIFGPH[[i]] <- max(DIFGPH[[i]], na.rm = T)
@@ -224,7 +234,12 @@ for (i in 1:length(fileNames)){
       
 }
 
+# save d table for revisado results comparation
+write.csv(d, file = "output/IGPH_coords.csv", row.names = T)
+#write.xlsx(d, file = "output/IGPH_coords.csv")
+
 # criar raster files cortados pelo contorno da topografia
+message("creating raster files")
 raster_IGPH <- c()
 raster_IGPH_corr <- c()
 raster_IDIR <- c()
@@ -234,7 +249,18 @@ raster_Kt <- c()
 
 #beginCluster( detectCores() -1)
 rasterOptions(timer = T, progress = "text")
-system.time(      
+
+if (corr == 1) {
+      temp <- raster(mat_rot(mat_rot(mat_rot(t(IGPH_corr[[1]])))), 
+                     xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
+      if (crop == 1) {
+            temp <- crop(temp, extent(land))
+            temp <- mask(temp, land)
+      }
+      raster_IGPH_corr <- c(raster_IGPH_corr, temp)
+}
+
+system.time(
       for (i in 1:length(fileNames)){      
             
             temp <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
@@ -244,18 +270,7 @@ system.time(
                   temp <- mask(temp, land)
             }
             raster_IGPH <- c(raster_IGPH, temp)
-            print(paste("mes", i, "- 00%"))
-            
-            if (corr == 1) {
-                  temp <- raster(mat_rot(mat_rot(mat_rot(t(IGPH_corr[[i]])))), 
-                                 xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
-                  if (crop == 1) {
-                        temp <- crop(temp, extent(land))
-                        temp <- mask(temp, land)
-                  }
-                  raster_IGPH_corr <- c(raster_IGPH_corr, temp)
-                  print(paste("mes", i, "- 20%"))
-            }
+            print(paste("mes", i, "- 20%"))
             
             temp <- raster(mat_rot(mat_rot(mat_rot(t(IDIR[[i]])))), 
                            xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
@@ -293,8 +308,8 @@ system.time(
             raster_Kt <- c(raster_Kt, temp)
             print(paste("mes", i, "- 100%"))
             
-            
-      })
+      }
+)
 #endCluster()
 rm(temp)
 
@@ -333,34 +348,34 @@ tS_f = as.POSIXct(timeLastDayInMonth(tS_i))
 
 # passar os rasters para RasterBrickTimeSeries class
 raster_IGPH <- brick(raster_IGPH)
-names(raster_IGPH) <- paste0("IGPH_", seq_months[1:length(fileNames)])
+names(raster_IGPH) <- paste0("IGPH_", months_name[1:length(fileNames)])
 #raster_IGPH_test <- new("RasterBrickTimeSeries", variable = "IGPH", 
 #                   sampled = pnts, rasters = raster_IGPH, TimeSpan.begin = tS_i, TimeSpan.end = tS_f)
 
 if (corr == 1) {
       raster_IGPH_corr <- brick(raster_IGPH_corr)
-      names(raster_IGPH_corr) <- paste0("IGPH_", seq_months[1:length(fileNames)])
+      names(raster_IGPH_corr) <- paste0("IGPH_", months_name[1])
       #      raster_IGPH_corr <- new("RasterBrickTimeSeries", variable = "IGPH_corr", 
       #                              sampled = pnts, rasters = raster_IGPH_corr, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 }
 
 raster_IDIR <- brick(raster_IDIR)
-names(raster_IDIR) <- paste0("IDIR_", seq_months[1:length(fileNames)])
+names(raster_IDIR) <- paste0("IDIR_", months_name[1:length(fileNames)])
 #raster_IDIR <- new("RasterBrickTimeSeries", variable = "IDIR", 
 #                   sampled = pnts, rasters = raster_IDIR, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
 raster_IDIF <- brick(raster_IDIF)
-names(raster_IDIF) <- paste0("IDIF_", seq_months[1:length(fileNames)])
+names(raster_IDIF) <- paste0("IDIF_", months_name[1:length(fileNames)])
 #raster_IDIF <- new("RasterBrickTimeSeries", variable = "IDIF", 
 #                   sampled = pnts, rasters = raster_IDIF, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
 raster_DIFGPH <- brick(raster_DIFGPH)
-names(raster_DIFGPH) <- paste0("DIFGPH_", seq_months[1:length(fileNames)])
+names(raster_DIFGPH) <- paste0("DIFGPH_", months_name[1:length(fileNames)])
 #raster_DIFGPH <- new("RasterBrickTimeSeries", variable = "DIFGPH", 
 #                     sampled = pnts, rasters = raster_DIFGPH, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
 raster_Kt <- brick(raster_Kt)
-names(raster_Kt) <- paste0("Kt_", seq_months[1:length(fileNames)])
+names(raster_Kt) <- paste0("Kt_", months_name[1:length(fileNames)])
 #raster_Kt <- new("RasterBrickTimeSeries", variable = "Kt", 
 #                 sampled = pnts, rasters = raster_Kt, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
 
@@ -382,10 +397,37 @@ for (j in 1:length(variavs)) {
       }
       
       if (png_out == 1) {
+            message("creating png files - ", variavs[j])
             
             pb <- txtProgressBar(min = 0, max = length(fileNames), style = 3, title = paste0(variavs[j]))
-            for (i in 1:length(fileNames)) {
-                  ##filled contour grafs
+            if (j != 2) {
+                  for (i in 1:length(fileNames)) {
+                        ##filled contour grafs
+                        
+                        variav_name <- paste0(variavs[j])
+                        
+                        #print(paste0("image variavel:", variav_name, " - mes:", i))
+                        
+                        max_axis <- ceiling(as.numeric(max(get(paste0("max_", variavs[j])))))
+                        
+                        name_png = paste0("output/images/", variavs[j], "_", months_name[i], ".png")
+                        png(name_png, width = ncols*7, height = nrows*7, units = "px", res = 250)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
+                        
+                        filled.contour(long, lat, t(get(variav_name)[,,i]),  color = color, levels = seq(0, max_axis, max_axis/15), # nlevels = 400, #axes = F #(12), nlev=13,
+                                       plot.title = title(main = as.expression(paste("Média de", variavs[j], "na Ilha da Madeira em", months_name[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
+                                       plot.axes = {axis(1); axis(2); 
+                                             contour(long, lat, t(hgt), add = T, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)));
+                                             grid(lty = 5, lwd = 0.5)},
+                                       key.title = title(main = as.expression(paste("[W/m^2]"))))
+                        
+                        #plot(getMap(resolution = "high"), add = T)
+                        #contour(long, lat, hgt, add=TRUE, lwd=1, labcex=1, levels=0.99, drawlabels=FALSE, col="grey30")
+                        
+                        dev.off()
+                        
+                        setTxtProgressBar(pb, i)
+                  }
+            } else if (j == 2) {
                   
                   variav_name <- paste0(variavs[j])
                   
@@ -393,11 +435,11 @@ for (j in 1:length(variavs)) {
                   
                   max_axis <- ceiling(as.numeric(max(get(paste0("max_", variavs[j])))))
                   
-                  name_png = paste0("output/images/", variavs[j], "_", seq_months[i], ".png")
+                  name_png = paste0("output/images/", variavs[j], "_", months_name[i], ".png")
                   png(name_png, width = ncols*7, height = nrows*7, units = "px", res = 250)  #width = 7000 (width = 14000, height = 9000, units = "px", res = 1000)
                   
                   filled.contour(long, lat, t(get(variav_name)[,,i]),  color = color, levels = seq(0, max_axis, max_axis/15), # nlevels = 400, #axes = F #(12), nlev=13,
-                                 plot.title = title(main = as.expression(paste("Média de", variavs[j], "na Ilha da Madeira em", seq_months[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
+                                 plot.title = title(main = as.expression(paste("Média de", variavs[j], "na Ilha da Madeira em", months_name[i])), xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
                                  plot.axes = {axis(1); axis(2); 
                                        contour(long, lat, t(hgt), add = T, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)));
                                        grid(lty = 5, lwd = 0.5)},
@@ -408,13 +450,14 @@ for (j in 1:length(variavs)) {
                   
                   dev.off()
                   
-                  setTxtProgressBar(pb, i)
-            }     
+            }
             close(pb)
             
       }
       
       if (kml_out == 1) {
+            message("creating kml files")
+            
             ##kmz
             #test <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
             #                xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
@@ -436,8 +479,21 @@ for (j in 1:length(variavs)) {
             
             setwd("output/kml/")
             
-            KML(get0(variav_name), file = paste0(variavs[j], ".kml"), time = c(tS_i, tS_i[length(tS_i)]), overwrite = T, #[length(tS_f)]
-                col = color(20), blur = 1)
+            # gravar sequencia dos meses
+            if (j != 2) {
+                  
+                  KML(get0(variav_name), file = paste0(variavs[j], ".kml"), time = c(tS_i, tS_i[length(tS_i)]), overwrite = T, #[length(tS_f)]
+                      col = color(20), blur = 1) 
+                  
+            }else if (j == 2) {
+                  
+                  KML(get0(variav_name), file = paste0(variavs[j], ".kml"), overwrite = T, #[length(tS_f)]
+                      col = color(20), blur = 1) 
+                  
+            }
+            # gravar total
+            #KML(get0(variav_name)[1], file = paste0(variavs[j], "_tot.kml"), overwrite = T, #[length(tS_f)]
+            #    col = color(20), blur = 1)
             #kml_layer.Raster(get0(variav_name), subfolder.name = paste(class(get0(variav_name))), TimeSpan.begin = tS_i, TimeSpan.end = tS_f, colour = color(20))
             #kml_layer.RasterBrick(get0(variav_name), plot.legend = TRUE, subfolder.name = paste(class(get0(variav_name))), dtime = tS_i, colour = color(20))
             
@@ -458,19 +514,28 @@ for (j in 1:length(variavs)) {
 save.image(file = "output/data.RData")
 
 if (nc_out == 1) {
+      message("creating netcdf files")
       
+      IGPH_tot = list()
+      IGPH_tot_corr = list()
       #transpose variavs matrixes
-      for (i in 1:length(fileNames)) {
+      for (i in 2:length(fileNames)) {
             
             IGPH[,,i] <- t(IGPH[,,i])
+            
+            IGPH_tot[[i-1]] <- t(IGPH[,,1])
             if (corr == 1) {
-                  IGPH_corr[,,i] <- t(IGPH_corr[,,i])
+                  IGPH_tot_corr[[i-1]] <- t(IGPH_corr[,,1])
             }
+            
             IDIR[,,i] <- t(IDIR[,,i])
             IDIF[,,i] <- t(IDIF[,,i])
             DIFGPH[,,i] <- t(DIFGPH[,,i])
             Kt[,,i] <- t(Kt[,,i])
       }
+      IGPH_tot <- array(unlist(IGPH_tot), dim=c(nrows, ncols, length(fileNames)-1))
+      IGPH_tot_corr <- array(unlist(IGPH_tot_corr), dim=c(nrows, ncols, length(fileNames)-1))
+      
       
       #define dimensions
       nc_londim <- ncdim_def(name = "lon", units = "degrees_east", vals = long) 
@@ -481,10 +546,11 @@ if (nc_out == 1) {
       nc_hgt <- ncvar_def(name = "hgt", units = "m", dim = list(nc_londim, nc_latdim), prec = "single")
       
       nc_IGPH <- ncvar_def(name = "IGPH", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
+      nc_IGPH_tot <- ncvar_def(name = "IGPH_tot", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
       
       if (corr == 1) {
             
-            nc_IGPH_corr <- ncvar_def(name = "IGPH_corr", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
+            nc_IGPH_tot_corr <- ncvar_def(name = "IGPH_tot_corr", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
             
       }
       
@@ -497,28 +563,29 @@ if (nc_out == 1) {
       nc_name <- paste("output/nc/ReSun_", local, ".nc", sep = "")
       if (corr == 1) {
             
-            ncout <- nc_create(filename = nc_name, vars = list(nc_hgt, nc_IGPH, nc_IGPH_corr, nc_IDIR, nc_IDIF, nc_DIFGPH, nc_Kt), force_v4 = T, verbose = F)
+            ncout <- nc_create(filename = nc_name, vars = list(nc_hgt, nc_IGPH_tot, nc_IGPH_tot_corr, nc_IGPH, nc_IDIR, nc_IDIF, nc_DIFGPH, nc_Kt), force_v4 = T, verbose = F)
             
       } else {
             
-            ncout <- nc_create(filename = nc_name, vars = list(nc_hgt, nc_IGPH, nc_IDIR, nc_IDIF, nc_DIFGPH, nc_Kt), force_v4 = T, verbose = F)
+            ncout <- nc_create(filename = nc_name, vars = list(nc_hgt, nc_IGPH_tot, nc_IGPH, nc_IDIR, nc_IDIF, nc_DIFGPH, nc_Kt), force_v4 = T, verbose = F)
             
       }
       
       #put variables
       ncvar_put(ncout, nc_hgt, t(hgt))
       
-      ncvar_put(ncout, nc_IGPH, IGPH)
+      ncvar_put(ncout, nc_IGPH, IGPH[,,2:13])
+      ncvar_put(ncout, nc_IGPH_tot, IGPH_tot)
       
       if (corr == 1) {
             
-            ncvar_put(ncout, nc_IGPH_corr, IGPH_corr)
+            ncvar_put(ncout, nc_IGPH_tot_corr, IGPH_tot_corr)
             
       }
-      ncvar_put(ncout, nc_IDIR, IDIR)
-      ncvar_put(ncout, nc_IDIF, IDIF)
-      ncvar_put(ncout, nc_DIFGPH, DIFGPH)
-      ncvar_put(ncout, nc_Kt, Kt)
+      ncvar_put(ncout, nc_IDIR, IDIR[,,2:13])
+      ncvar_put(ncout, nc_IDIF, IDIF[,,2:13])
+      ncvar_put(ncout, nc_DIFGPH, DIFGPH[,,2:13])
+      ncvar_put(ncout, nc_Kt, Kt[,,2:13])
       
       #put additional attributes into dimension and data variables
       ncatt_put(ncout, "lon", "axis", "X") #,verbose=FALSE) #,definemode=FALSE)
