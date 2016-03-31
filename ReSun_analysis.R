@@ -205,11 +205,12 @@ for (i in 1:length(fileNames)){
       
       for (l in 1:length(lat_index)) {
             
-            d <- rbind(d ,c(Location = levels(locs$loc)[l], value = IGPH[[1]][lat_index[l],long_index[l]], Month = months_name[1]))
             
             if (i == 1 & corr == 1) {    
                   
                   d <- rbind(d ,c(Location = levels(locs$loc)[l], value = IGPH_corr[[i]][lat_index[l],long_index[l]], Month = "tot_corr"))
+                  
+                  d <- rbind(d ,c(Location = levels(locs$loc)[l], value = IGPH[[1]][lat_index[l],long_index[l]], Month = months_name[1]))
                   
             } else if (i >= 2 & i <= length(fileNames)){ #if (i >= 2 & i <= length(fileNames))
                   
