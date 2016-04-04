@@ -313,11 +313,11 @@ for (i in 1:length(fileNames)/2) {
             
       }
       
-      IGPH[[i + length(fileNames)/2]] <- NULL
-      Kt[[i + length(fileNames)/2]] <- NULL
-      IDIR[[i + length(fileNames)/2]] <- NULL
-      IDIF[[i + length(fileNames)/2]] <- NULL
-      DIFGPH[[i + length(fileNames)/2]] <- NULL
+      IGPH[[length(fileNames)/2]] <- NULL
+      Kt[[length(fileNames)/2]] <- NULL
+      IDIR[[length(fileNames)/2]] <- NULL
+      IDIF[[length(fileNames)/2]] <- NULL
+      DIFGPH[[length(fileNames)/2]] <- NULL
       
 }
 
