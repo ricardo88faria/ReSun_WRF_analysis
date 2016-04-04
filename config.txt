@@ -10,16 +10,16 @@ corr = 1
 corr_vars = c("z")
 
 # do you want to crop raster image in kml (if yes, takes 5 times longer to crop)? 0=No 1=Yes
-crop = 0
+crop = 1
 
 # do you want a netcdf (.nc) file output? 0=No 1=Ye
-nc_out = 1
+nc_out = 0
 
 # do you want a image (.png) file output? 0=No 1=Ye
-png_out = 1
+png_out = 0
 
 # do you want a google earth (.kml) file output? 0=No 1=Ye
-kml_out = 1
+kml_out = 0
 
 #Local name:
 local = "MAD"
