@@ -9,16 +9,16 @@ library(ggplot2)
 
 #load("../tests_shiny/nwt_testing_subset.RData")
 #load("../tests_shiny/nwt_locations.RData")
-load("data.RData")
+load("output/data.RData") # output/
 
-decades <- seq_months
+#decades <- seq_time
+seq_time <- seq(00, 12, by =1)
 lon <- -16.9644
 lat <- 32.7375
 
 locs <- locs
-d <- d
-#d <- d.cru$Locs[[2]] %>% filter(Month=="Jun")
-x <- brickraster_kt
+d <- rbind(d, d_tot)
+x <- raster_IGPH
 
 
 # @knitr ui02
@@ -26,17 +26,21 @@ ui <- bootstrapPage(
   tags$style(type="text/css", "html, body {width:100%;height:100%}"),
   leafletOutput("Map", width="100%", height="100%"),
   absolutePanel(top=10, right=10,
-    sliderInput("dec", "Decade", min=min(seq_time), max=max(seq_time), value=seq_time[1], step=1, sep="", post="s"), # NEW LINE
-    checkboxInput("show_communities", "Show communities", TRUE),
-    checkboxInput("legend", "Show legend", TRUE), # NEW LINE
-    conditionalPanel("input.show_communities == true",
-      selectInput("location", "Community", c("", levels(locs$loc)), selected=""),
+    sliderInput("date", "Mes", min=min(seq_time), max=max(seq_time), value=seq_time[1], step=1, sep=""), # , post=" Mês"
+    checkboxInput("EMAS", "Mostrar EMAS", TRUE),
+    checkboxInput("legend", "Mostrar legenda", TRUE), # NEW LINE
+    conditionalPanel("input.EMAS == true",
+      selectInput("location", "Localização das EMAS", c("", levels(locs$loc)), selected=""),
       conditionalPanel("input.location !== null && input.location !== ''",
-        actionButton("button_plot_and_table", "View Plot/Table", class="btn-block"))
-    )
+        actionButton("button_plot_and_table", "Ver Gráfico/Tabela da EMA", class="btn-block"))),
+    img(src="logo.png", height = 70, width = 100),
+    img(src="ReSun.jpg", height = 70, width = 130)
+#    img(src="MJi_clean.png", height = 70, width = 100)
   ),
-  bsModal("Plot_and_table", "Plot and Table", "button_plot_and_table", size = "large",
+
+  bsModal("Plot_and_table", "Gráfico e Tabela", "button_plot_and_table", size = "large",
     plotOutput("TestPlot"),
+#    plotOutput("TestPlot1"),
     dataTableOutput("TestTable")
   )
 )
@@ -45,12 +49,12 @@ ui <- bootstrapPage(
 server <- function(input, output, session) {
   acm_defaults <- function(map, x, y) addCircleMarkers(map, x, y, radius=6, color="black", fillColor="orange", fillOpacity=1, opacity=1, weight=2, stroke=TRUE, layerId="Selected")
 
-  ras <- reactive({ subset(x, which(seq_months==input$dec)) })
+  ras <- reactive({ subset(x, which(seq_time==input$date)) })
   ras_vals <- reactive({ values(ras()) })
-  pal <- reactive({ colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), ras_vals(), na.color="transparent") })
+  pal <- reactive({ colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), ras_vals(), na.color="transparent") }) #colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), ras_vals(), na.color="transparent")
 
   output$Map <- renderLeaflet({
-    leaflet() %>% setView(lon, lat, 4) %>% addTiles() %>%
+    leaflet() %>% setView(lon, lat, 11) %>% addTiles() %>%
       addCircleMarkers(data=locs, radius=6, color="black", stroke=FALSE, fillOpacity=0.5, group="locations", layerId = ~loc)
   })
 
@@ -63,13 +67,14 @@ server <- function(input, output, session) {
     proxy <- leafletProxy("Map")
     proxy %>% clearControls()
     if (input$legend) {
-      proxy %>% addLegend(position="bottomright", pal=pal(), values=ras_vals(), title="Precipitation (mm)")
+      proxy %>% addLegend(position="bottomright", pal=pal(), values=ras_vals(), title="Radiação Global [W/m^2]")
     }
   })
 
-  observe({ # show or hide location markers
+  # show or hide location markers
+  observe({ 
     proxy <- leafletProxy("Map")
-    if (input$show_communities) {
+    if (input$EMAS) {
       proxy %>% showGroup("locations")
     } else {
       updateSelectInput(session, "location", selected="")
@@ -77,7 +82,8 @@ server <- function(input, output, session) {
     }
   })
 
-  observeEvent(input$Map_marker_click, { # update the map markers and view on map clicks
+  # update the map markers and view on map clicks
+  observeEvent(input$Map_marker_click, { 
     p <- input$Map_marker_click
     proxy <- leafletProxy("Map")
     if(p$id=="Selected"){
@@ -87,14 +93,16 @@ server <- function(input, output, session) {
     }
   })
 
-  observeEvent(input$Map_marker_click, { # update the location selectInput on map clicks
+  # update the location selectInput on map clicks
+  observeEvent(input$Map_marker_click, { 
     p <- input$Map_marker_click
     if(!is.null(p$id)){
       if(is.null(input$location) || input$location!=p$id) updateSelectInput(session, "location", selected=p$id)
     }
   })
 
-  observeEvent(input$location, { # update the map markers and view on location selectInput changes
+  # update the map markers and view on location selectInput changes
+  observeEvent(input$location, { 
     p <- input$Map_marker_click
     p2 <- subset(locs, loc==input$location)
     proxy <- leafletProxy("Map")
@@ -109,8 +117,19 @@ server <- function(input, output, session) {
 
 # @knitr server03pointdata
 Data <- reactive({ d %>% filter(Location==input$location) })
+Data_tot <- reactive({ d })
 
-output$TestPlot <- renderPlot({ ggplot(Data(), aes(value, Month)) + geom_line() + geom_smooth() })
+output$TestPlot <- renderPlot({ ggplot(Data(), aes(x = Month ,y = value, color = Location, group = Location)) + 
+            geom_bar(stat = "identity", position = "dodge") + 
+            scale_fill_brewer(palette="Paired") + 
+            theme_bw() +
+            ggtitle("Radiação mensal nas EMAS [W/m^2]") })
+
+#output$TestPlot1 <- renderPlot({ ggplot(Data_tot(), aes(x = Month ,y = value, color = Location, group = Location)) + 
+#            geom_bar(stat = "identity", position = "dodge") + 
+#            scale_fill_brewer(palette="Paired") + 
+#            theme_bw() +
+#            ggtitle("Radiação anual nas EMAS [W/m^2]") })
 
 output$TestTable <- renderDataTable({
   Data()
