@@ -158,7 +158,7 @@ if (corr == 1) {
                   corr_fix[[paste0(fix_var[i], "_D02")]] <- matrix(data = corr_fix$lon, nrow = nrow(hgt), ncol = ncol(hgt), byrow = T)
                   corr_fix[[paste0(fix_var[i], "_D03")]] <- matrix(data = corr_fix$lon, nrow = nrow(hgt), ncol = ncol(hgt), byrow = T)
                   
-                  }
+            }
       }
 }
 
@@ -197,7 +197,7 @@ for (i in 1:length(fileNames)){
       IDIR[[i]] <- ncvar_get(temp_nc)[,,7]
       IDIF[[i]] <- ncvar_get(temp_nc)[,,6]  
       DIFGPH[[i]] <- ncvar_get(temp_nc)[,,5]  
-
+      
       if (i == 1 & corr == 1 & length(fix_var) > 0) {
             
             for (j in 1:length(fix_var)) {
@@ -216,7 +216,7 @@ for (i in 1:length(fileNames)){
                   } 
                   # i > 13 & i <= 26 equivalente ao dominio D03
                   else if (i == 14 ) {
-                       
+                        
                         m <- corr_values[c("m_D03"),c(fix_var[j])]
                         x <- corr_values[c("x_D03"),c(fix_var[j])]
                         
@@ -302,7 +302,7 @@ for (i in 1:(length(fileNames)/2)) {
       IDIR[[i]] <- (IDIR[[i]] + IDIR[[i + length(fileNames)/2]])/2
       IDIF[[i]] <- (IDIF[[i]] + IDIF[[i + length(fileNames)/2]])/2
       DIFGPH[[i]] <- (DIFGPH[[i]] + DIFGPH[[i + length(fileNames)/2]])/2
-
+      
 }
 # remover resto das matrizes nao necessarias para libertar espaco
 for (i in 1:length(fileNames)/2) {
