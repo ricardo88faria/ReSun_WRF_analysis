@@ -2,7 +2,11 @@
 title: "app"
 author: "Ricardo Faria"
 date: "4 de abril de 2016"
-output: html_document
+output:
+  html_document:
+    theme: spacelab
+    highlight: zenburn
+    code_folding: show
 runtime: shiny
 ---
 
@@ -19,5 +23,5 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r, echo=FALSE}
-shinyAppFile("app.R", options=list(width="100%", height=800))
+shinyAppFile("app.R", options=list(width="100%", width = 2000, height=800))
 ```
