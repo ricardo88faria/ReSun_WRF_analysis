@@ -1,0 +1,195 @@
+---
+title: "Atlas da Radiação Solar da Ilha da Madeira"
+author: "Ricardo Faria"
+date: '`r format(Sys.Date())`'
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: yes
+    keep_tex: yes
+    number_sections: yes
+documentclass: article
+---
+
+```{r setup, include=FALSE}
+# adicionar \usepackage[portuguese]{babel} ao ficheiro latex (.tex)
+library(shiny)
+library(knitr)
+library(kfigr)
+library(captioner)
+
+#library(knitcitations); cleanbib()
+#cite_options(citation_format = "pandoc", check.entries=FALSE)
+knitr::opts_chunk$set(echo = TRUE, dev = 'pdf', dpi=200, fig.align='center', fig.lp='fig:')
+#knitr::opts_chunk$set(, dev = 'pdf')
+load("../output/data.RData")
+load("../output/data_coords.RData")
+load("../output/data_merge.RData")
+
+options(knitr.table.format = 'pandoc')
+
+```
+
+
+# Introdução
+***
+A realização do estudo do Atlas da Radiação Solar da Ilha da Madeira, teve iniciativa no estágio do Eng. Ricardo Faria no [LREC](<http://www.lrec.pt>). Este novo Atlas foi realizada com novos modelos matemáticos, [WRF](<http://www.wrf-model.org>) para modelação do clima e o ReSun^TM^ para modelar a distribuição do recurso solar, em plano horizontal, de modo a identificar de regiões com maior potencial solar, este último é usado com a colaboração da Empresa [Megajoule Inovação](<http://megajoule.pt>).
+
+
+# Localização e Decrição
+***
+A região em estudo é a ilha da Madeira, que é a principal ilha do arquipélago da Madeira, situado no oceano Atlântico, a sudoeste da costa portuguesa. Encontra-se entre as longitudes -17.3º a -16.64º e latitudes 32.6º a 32.9º. O ponto culminante situa-se no Pico Ruivo, 1.862 m de altura, a ilha é composta por um perímetro	179.3  km e área de 742.41  km^2^.
+O [LREC](<http://www.lrec.pt>) dispõe de uma vasta rede de Estações Meteorológicas Automáticas (EMA) distribuidas por toda a ilha, representada na \ref{fig:ggmap} `r figr("ggmap", TRUE, type="Fig.")` e  `r figr("est_tab", TRUE, type="Tab.")`. Reference [@fenner2012a]
+
+```{r ggmap, echo=FALSE,  message=FALSE, anchor = "Figura", fig.cap = "Localização da posição das EMAS que pertencem ao LREC"}
+library(ggmap)
+library(RColorBrewer)
+
+data <- fortify(locs)
+lon_coords <- long[length(long)/2]
+lat_coords <- lat[length(lat)/2]
+colors <- brewer.pal(9, "BuGn")
+
+mapImage <- get_map(location = c(lon = lon_coords, lat = lat_coords),
+  color = "color",
+  source = "google",
+  maptype = "terrain",
+  zoom = 10)
+
+ggmap(mapImage) +
+      geom_point(data = data, aes(x = lon, y = lat, fill = loc, color = loc, group = loc), # color = loc
+             size = 3, show.legend = T,
+             alpha = 1) +
+      scale_color_brewer(palette="Paired") +
+      theme_bw() +
+      labs(x = "Longitude", y = "Latitude")
+      
+```
+
+
+```{r est_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
+kable(data, caption = 'Localização das EMAS')
+```
+
+
+## Clima 
+Devido à sua latitude, a ilha da Madeira apresenta todas as características de ilha subtropical, caracteristicamente a costa Norte apresenta um clima temperado, enquanto a Sul denota-se mais subtropical. Em certos pontos da costa sul, as temperaturas médias anuais atingem valores acima dos 20 graus celsius. A temperatura da água do mar, varia entre os 26 de verão e os 17 de inverno. Os ventos predominantes são de oeste a noroeste no inverno, e de nordeste no verão (alíseos). A precipitação anual varia de 500 mm no sudeste da ilha aos mais de 2000 mm nas encostas norte.
+
+## Topografia
+A ilha da Madeira apresenta uma topografia muito montanhosa, com profundos vales incrustados entre os picos e suas caraterísticas falésias.
+
+```{r topography, echo=FALSE, message=FALSE, fig.cap="topografia.", anchor = "Figura"}
+
+contour(long, lat, t(hgt), asp =1.1, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)))
+grid()
+
+```
+
+# Recurso da Energia Solar
+
+A radiação solar incidente na superfície terrestre resulta de uma complexa interacção entre atmosfera e a superfície. Numa escala mais global, fazem-se notar os gradientes da latitude causados pela geometria da terra e pelo seu movimento relativo ao sol (translação e rotação). Numa escala regional e até local, a morfologia do terreno é o maior factor de modificação da distribuição da radiação solar, variando em resposta à elevação, inclinação da superfície, orientação e sombreamento. A atenuação atmosférica, efeitos de dispersão e absorção pelos gases, partículas sólidas e líquidas, bem como a nebulosidade, agem como factores depreciativos dos valores de radiação.
+A radiação que chega à superfície terrestre é selectivamente atenuada pela atmosfera, sendo a radiação directa a componente que não é reflectida nem dispersa. A radiação que é dispersa origina a radiação difusa e, por fim, uma pequena parte é reflectida (apenas em superfícies inclinadas) causando a radiação reflectida. Estas três componentes da radiação juntas, dão origem à radiação global ou onda curta.
+Dada a atenuação da radiação, a quantidade de energia que actualmente chega à Terra, habitualmente, não excede os 70 % daquela que se encontra fora da nossa atmosfera, designada de extraterrestrial. Comummente as regiões de baixa latitude e especialmente com climas secos, expressam, tipicamente, os índices de radiação médios mais altos.
+Dependendo da tecnologia empregue para transformação da energia solar, poderemos ter uma transformação de todas as componentes da radiação ou de apenas uma. A insolação (irradiação ou radiação) recebida por um painel solar apreende todas as componentes, todavia, os sistemas de transformação que empregam concentração óptica (exemplo dos concentradores parabólicos), apenas podem usar a radiação directa normal para transformação.
+O recurso solar num dado local é caracterizado pela radiação ou irradiação solar por unidade de área, geralmente expressa em quilowatt-hora ou megajoule por metro quadrado por dia ou por ano.
+
+
+# Metodologia
+
+Metodologia a usar na elaboração do novo Atlas Solar do Arquipélago da Madeira:
+A estimativa do recurso solar será executada pelo código de simulação ReSun^TM^ (Pereira et al 2013) na sua variante de modelação, que se encontra capacitada para modelar os principais factores que afectam a magnitude do recurso solar, permitindo assim apurar a verdadeira valia da distribuição do recurso solar de uma forma mais detalhada. A modelação ReSun^TM^ faz uso de resultados das simulações meteorológicas WRF (Weather Research & Forecasting Model), num procedimento designado de downscaling, que engloba simulações idealizadas (céu limpo) nos pontos de uma malha de cálculo (mapeamento) ou pontos discretos de interesse (séries dados). São usadas técnicas de decomposição da radiação e métodos de interpolação por recurso a distância efetivas.
+As simulações a usar na obtenção do Atlas Solar serão realizadas para um período temporal equivalente a um ano meteorológico típico, selecionado a partir das Estações Meteorológicas Automáticas distribuídas pelo arquipélago da Madeira e com auxilio, se necessário, de dados provenientes de uma análise retrospetiva do programa MERRA (Modern-Era Retrospective Analysis For Research And Applications). Os dados das estações serão processados e analisados com o módulo QC (Solar Data Quality Check) do ReSun^TM^, onde se fará uma análise de consistência das medições de radiação global das estações. Será também realizada uma averiguação da performance do ReSun^TM^ para um ano a selecionar a partir das medições locais.
+
+### Descrição do modelo ReSun
+
+O modelo ReSun^TM^, _Solar Modelling on Coupling Techinques with Mesoscale Simulations_, Pereira et al 2013, tem sido desenvolvido e testado desde 2009 na MEGAJOULE INOVAÇÃO e conta também com a colaboração do departamento de Física da Universidade de Aveiro. O ReSun^TM^ usa resultados das simulações do modelo WRF, para correção das simulações idealizadas (céu limpo) nos pontos da malha ReSun^TM^. São usadas técnicas de decomposição da radiação e métodos de interpolação, por recurso a distância efetivas, para o transporte das quantidade de correção para os pontos da malha de cálculo do Re.SunTM.
+Os factores de correção da simulação de céu limpo da malha do ReSun^TM^ podem ser estimados através de duas formas, em termos de índice solar global (Radiação Global WRF/Radiação Global Céu Limpo) ou índice solar directo (Radiação Direta WRF / Radiação Direta Céu Limpo) e difuso (Radiação Global WRF / Radiação Difusa Céu Limpo).
+As técnicas de decomposição da radiação global para obtenção da radiação direta e difusa, é conseguida através da utilização do modelo DirInt (Perez R., Ineichen P., Maxwell E., Seals R., Zelenka A. , 1992) ou BRL ( Boland et al. 2012).
+Os efeitos do terreno estão programados para serem contabilizados através do método proposto por Dozier et al. (1980). O ReSun^TM^ integra dois modelos de simulação em condições de céu limpo, o modelo ESRA (European Solar Radiation Atlas) proposto por Rigollier et al. (2000) e o modelo Simplified SOLIS proposto por Ineichen (2008). O modelo ESRA permite duas formulações para a estimativa da radiação solar em condições de céu limpo: irradiância (W/m^2) e irradiação (Wh/m^2.dia). O modelo SOLIS simplificado calcula a irradiância em céu limpo com base em cálculos de transferência radiativa e na relação de Lambert – Beer.
+O modelo ReSun^TM^ apresenta a capacidade de integrar informação atual do estado da pureza da atmosfera a ser ingerida pelo modelo de céu limpo. Os aerossóis ou o TL2 (Linke Turbidity para uma massa de ar igual a 2) são parâmetros de caracterização do estado de pureza e podem ser obtidos a partir do programa SODA (Solar Radiation Data), ou derivados a partir da MACC Re-analysis (Monitoring Atmospheric Composition & Climate) projeto da ECMWF (European Centre for Medium Range Weather Forecast). O projeto SODA possui valores mensais de TL2 disponíveis para o mundo todo, resultante de um levantamento de diferentes fontes de informação, Redmund et al. , 2003. O projeto MACC Re-Analysis não possui informações de TL2 para uso directo, contudo podem ser derivadas utilizando informação do profundidade óptica dos aerossóis para diferentes comprimentos de onda e conjugando dados de coluna de água precipitável. No ReSun^TM^ a estimativa de TL2 usando informação da MACC é possível através de uma de duas formulações de cálculo: Redmund et al. 2003 ou Pierre Ineichen 2008 que considera um ajuste multivariável calculado a partir da irradiação directa estimada com o modelo Solis em conjunto com a fórmula pyrheliometric de Kasten (1996).
+Dependendo do modelo do céu limpo utilizado existem diferentes informações para caracterizar a pureza atmosfera. No caso do modelo de ESRA as equações fazem uso da informação de TL2. A versão simplificada do modelo de Solis (Ineichen, 2008), utiliza como entrada a informação da profundidade óptica dos aerossóis (Aerosol Optical Depth, AOD) para um comprimento de onda de 700 nm (AOD700).
+Para efeitos de simulação o ReSun^TM^ assume valores de cadência diária de AOD ou TL2. Assim sendo temos que os valores mensais de SODA são interpolados linearmente de mensal para diário e os valores médios diários da MACC resultam de uma frequência de amostragem de 3 horas.
+
+### Ano Meteorológico Típico
+
+Em termos gerais, a previsão da performance a longo prazo de qualquer sistema energético solar depende da existência de uma extensa e fiável base climática local. Teoricamente, esta análise energética deve ser realizada usando-se vários anos de dados climáticos, o que na maior parte das vezes não é possível dada a sua inexistência. Isto leva-nos a ter de recorrer a informação proveniente de bases climáticas de larga escala obtidas através de modelos de simulação avançados. Contudo, o uso de períodos extensões para simulação são computacionalmente exigentes, tornando as análises demasiado morosas e dispendiosas. A variabilidade inter anual das condições climáticas motiva a necessidade de se derivar uma base que represente as condições médias de longo prazo num único ano. Comummente isto é conseguido através de um ano meteorológico típico (Typical Meterological Year, TMY) constituído pela informação dos 12 meses mais representativos.
+O método estatístico utilizado para estimativa do TMY foi o de Filkenstein – Shafer (FS) devidamente implementado pela [Megajoule Inovação](<http://megajoule.pt>). O método baseia a seleção dos meses através de uma análise da frequência cumulativa da média diária dos valores de Radiação Global e Temperatura para cada um dos meses de um ano civil, Janeiro a Dezembro. De uma forma resumida, a escolha do ano para cada um dos meses resultará do que apresentar o menor somatório de erros diários de frequências cumulativas de um mês em especifico, de um dado ano, face ao longo termo do mês. De salientar que os erros obtidos para cada uma das variáveis incluídas na análise do TMY são sujeitas a uma ponderação utilizando-se pesos diferentes, 70% e 30%, radiação solar global e temperatura, respetivamente.
+Para obtenção de um TMY que caracterize de uma forma fiável a distribuição da radiação global de longo prazo e que reflita a variabilidade climática na área de interesse, recorreu-se a dados horários de radiação solar global e temperatura provenientes da Reanálise MERRA da NASA. Foram extraídos 30 pontos nativos da malha MERRA, distribuídos ao longo da área de interesse, para os últimos 10 anos (2005 – 2015) para apoio à seleção de 12 meses típicos que compõem o TMY. Na `r figr("ggmap", TRUE, type="Fig.")` pode ser consultada a distribuição geográfica dos pontos.
+Após extração da informação para os 30 pontos, foi realizada uma integração da informação de cada ponto para um único ficheiro de forma a permitir a análise estatística para a área de interesse. A `r figr("tmy_tab", TRUE, type="Tab.")` apresenta a informação relativa anos obtidos para cada um dos meses do TMY e o valor médio do erro absoluto ponderado (Radiação e Temperatura) face ao longo termo.
+
+```{r cob_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
+file_csv <- Sys.glob("ReSun/*.csv")
+tmy_values <- read.csv(file_csv, sep = ";")
+
+tx_cob <- data.frame(tax_cob_tmy = tmy_values[47:54,2:13])
+colnames(tx_cob) <- c(months_name[2:13])
+row.names(tx_cob) <- tmy_values[47:54,1]
+
+kable(tx_cob, caption = 'Taxa de cobertura de Dados das EMAS entre 2005 e 2015')
+```
+
+Após realizar a análise das EMAS com o Quality Check do ReSun^TM^, verifica-se que as estações de Machico (MACH) e Santana (STNA) apresentam uma taxa de cobertura de dados muito baixa ao longo do ano de 2005 a 2015, estas foram retiradas para o cálculo final do TMY, de modo a obter maior fiabilidade nos valores finais deste.
+
+```{r tmy_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
+tmy_tab <- data.frame(#Mês = months_name[2:13], 
+                      Ano = as.numeric(tmy_values[2,2:13]),
+                      Erro_abs = as.numeric(tmy_values[14,2:13])*100,
+                      Rad_sol = as.numeric(tmy_values[26,2:13]))
+colnames(tmy_tab) <- c("Ano", " Erro abs. [%]", "Rad. Sol. [W/m2]")
+row.names(tmy_tab) <- months_name[2:13]
+
+kable(tmy_tab, caption = 'Dados do TMY')
+```
+
+No anexo ??? pode ser consultada a evolução da frequência cumulativa diária da radiação global e temperatura para cada um dos meses do TMY.
+
+
+
+
+```{r, echo=FALSE}
+shinyAppFile("../app.R", options=list(width="100%", height=400))
+```
+
+
+```{r stations, echo=FALSE, message=FALSE}
+library(ggplot2)
+
+
+#print(data, type="html")
+
+#![Caption for the picture.](output/images/IGPH_corr_Jan.png)
+
+```
+
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+image(t(IGPH[,,1]), asp = .5)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+---
+references:
+- id: fenner2012a
+  title: One-click science marketing
+  author:
+  - family: Fenner
+    given: Martin
+  container-title: Nature Materials
+  volume: 11
+  URL: 'http://dx.doi.org/10.1038/nmat3283'
+  DOI: 10.1038/nmat3283
+  issue: 4
+  publisher: Nature Publishing Group
+  page: 261-263
+  type: article-journal
+  issued:
+    year: 2012
+    month: 3
+---
