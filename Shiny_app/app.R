@@ -1,4 +1,5 @@
 library(shiny)
+library(shinythemes)
 library(shinyBS)
 library(rgdal)
 library(raster)
@@ -9,9 +10,9 @@ library(ggplot2)
 library(markdown)
 
 
-load("output/data.RData") # output/
-load("output/data_coords.RData")
-load("output/data_merge.RData")
+load("../output/data.RData") # output/
+load("../output/data_coords.RData")
+load("../output/data_merge.RData")
 
 #decades <- seq_time
 seq_time <- seq(00, 12, by =1)
@@ -22,58 +23,63 @@ locs <- locs
 d <- rbind(d, subset(d_tot, Month=="TMY_corr"))
 x <- raster_IGPH
 # porto santo
-xx <- raster_IGPH_merg
+ps <- raster_IGPH_merg
 
 maxIGPH <- round(max(as.numeric(max_IGPH)+5),-1)
 
 # knitr ui02
-ui <- bootstrapPage(
-      tags$style(type="text/css", "html, body {width:100%;height:100%}"),
-      leafletOutput("Map", width="100%", height="100%"),
-      absolutePanel(top=10, right=10, draggable = F,
-                    sliderInput("date", "Mês", min=min(seq_time), max=max(seq_time), value=seq_time[1], step=1, sep="", 
-                                animate = animationOptions(interval = 2500, loop = F)), # , post=" Mês"  , playButton = "PLAY", pauseButton = "PAUSA"
-                    checkboxInput("EMAS", "Mostrar EMAS", TRUE),
-                    checkboxInput("legend", "Mostrar legenda", TRUE), # NEW LINE
-                    sliderInput("opac", "Opacitade do Raster", min=0, max=1, value=.8, step=.1, sep=""), # para opacidade
-                    conditionalPanel("input.EMAS == true",
-                                     selectInput("location", "Localização das EMAS", c("", levels(locs$loc)), selected=""),
-                                     conditionalPanel("input.location !== null && input.location !== ''",
-                                                      actionButton("button_plot_and_table", "Ver Gráfico/Tabela da EMA", class="btn-block"))),
-                    style = "opacity: 0.9"
-                    #    img(src="MJi_clean.png", height = 70, width = 100)
-      ),
-      absolutePanel(top = 10, left = 50, draggable = TRUE,
-                    img(src="LREC.png", height = 70, width = 110),
-                    img(src="ReSun.jpg", height = 70, width = 130),
-                    style = "opacity: 0.8"
-      ),
-      absolutePanel(bottom = 5, left = 5, width = 700, draggable = TRUE,
-                    wellPanel(
-                          HTML(markdownToHTML(fragment.only=TRUE, text=c(
-                                "Notas:
-                                * O intante Mês 0, corresponde à média anual do TMY ajustado com as medições.
-                                * Os valores mensais são representados sem correção, uma vez que a correção foi aplicada à média anual.
-                                * Os meses que compõem o Ano Meteorológico Tipico a simular com o ReSun tiveram por base 10 anos medidos na sua estimativa.
-                                * EMAS (Estações Meteorológicas Automáticas).
-                                "
-                          )))),
-                    style = "opacity: 0.8"
-                          ),
-      
-      bsModal("Plot_and_table", "Gráfico e Tabela", "button_plot_and_table", size = "large",
-              plotOutput("TestPlot"),
-              #    plotOutput("TestPlot1"),
-              dataTableOutput("TestTable")
-      )
-                          )
+ui <- bootstrapPage( #theme = shinytheme("journal"),
+                     tags$style(type="text/css", "html, body {width:100%;height:100%}"),
+                     leafletOutput("Map", width="100%", height="100%"),
+                     absolutePanel(top=10, right=10, draggable = F,
+                                   sliderInput("date", "Mês", min=min(seq_time), max=max(seq_time), value=seq_time[1], step=1, sep="", 
+                                               animate = animationOptions(interval = 2500, loop = F)), # , post=" Mês"  , playButton = "PLAY", pauseButton = "PAUSA"
+                                   checkboxInput("EMAS", "Mostrar EMAS", TRUE),
+                                   checkboxInput("legend", "Mostrar legenda", TRUE), # NEW LINE
+                                   sliderInput("opac", "Opacitade do Raster", min=0, max=1, value=.8, step=.1, sep=""), # para opacidade
+                                   conditionalPanel("input.EMAS == true",
+                                                    selectInput("location", "Localização das EMAS", c("", levels(locs$loc)), selected=""),
+                                                    conditionalPanel("input.location !== null && input.location !== ''",
+                                                                     actionButton("button_plot_and_table", "Ver Gráfico/Tabela da EMA", class="btn-block"))),
+                                   #actionButton("about", "Sobre", class="btn-block"),
+                                   
+                                   style = "opacity: 0.9"
+                                   #    img(src="MJi_clean.png", height = 70, width = 100)
+                     ),
+                     absolutePanel(top = 10, left = 50, draggable = TRUE,
+                                   img(src="LREC.png", height = 70, width = 110),
+                                   img(src="ReSun.jpg", height = 70, width = 130),
+                                   style = "opacity: 0.9"
+                     ),
+                     absolutePanel(bottom = 5, left = 5, width = 700, draggable = TRUE,
+                                   wellPanel(
+                                         HTML(markdownToHTML(fragment.only=TRUE, text=c(
+                                               "Notas:
+                                               * O intante Mês 0, corresponde à média anual do TMY ajustado com as medições.
+                                               * Os valores mensais são representados sem correção, uma vez que a correção foi aplicada à média anual.
+                                               * Os meses que compõem o Ano Meteorológico Tipico a simular com o ReSun tiveram por base 10 anos medidos na sua estimativa.
+                                               * EMAS (Estações Meteorológicas Automáticas).
+                                               "
+                                         ))), actionButton("about", "Sobre", class="btn-block")
+                                         ),
+                                   style = "opacity: 0.9"
+                                         ),
+                     bsModal("abouttext", "Sobre", "about", 
+                             textOutput("aboutText")
+                     ),
+                     bsModal("Plot_and_table", "Gráfico e Tabela", "button_plot_and_table", size = "large",
+                             plotOutput("TestPlot"),
+                             #    plotOutput("TestPlot1"),
+                             dataTableOutput("TestTable")
+                     )
+                                         )
 
 # knitr server03
-server <- function(input, output, session) { # added xx for another raster, porto santo
+server <- function(input, output, session) { # added ps for another raster, porto santo
       acm_defaults <- function(map, x, y) addCircleMarkers(map, x, y, radius=6, color="black", fillColor="orange", fillOpacity=1, opacity=1, weight=2, stroke=TRUE, layerId="Selected")
       
       ras <- reactive({ subset(x, which(seq_time==input$date)) })
-      ras_x <- reactive({ subset(xx, which(seq_time==input$date)) })
+      ras_ps <- reactive({ subset(ps, which(seq_time==input$date)) })
       ras_vals <- reactive({ c(0, seq(50, 220, 5), maxIGPH) }) #c(0, maxIGPH)
       pal <- reactive({ colorNumeric(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), na.color="transparent") }) #colorNumeric(palette = c("#0C2C84", "#41B6C4", "#FFFFCC"), domain = ras_vals(), na.color="transparent")
       
@@ -84,8 +90,8 @@ server <- function(input, output, session) { # added xx for another raster, port
       
       observe({
             proxy <- leafletProxy("Map")
-            # proxy %>% addRasterImage(ras(), colors=pal(), opacity=input$opac) %>% addRasterImage(ras_x(), colors=pal(), opacity=input$opac)
-            proxy %>% removeTiles(layerId="raster") %>% addRasterImage(ras(), colors=pal(), opacity=input$opac, layerId="raster") %>% addRasterImage(ras_x(), colors=pal(), opacity=input$opac, layerId="porto_santo")
+            # proxy %>% addRasterImage(ras(), colors=pal(), opacity=input$opac) %>% addRasterImage(ras_ps(), colors=pal(), opacity=input$opac)
+            proxy %>% removeTiles(layerId="raster") %>% addRasterImage(ras(), colors=pal(), opacity=input$opac, layerId="raster") %>% addRasterImage(ras_ps(), colors=pal(), opacity=input$opac, layerId="porto_santo")
       })
       
       
@@ -161,6 +167,12 @@ server <- function(input, output, session) { # added xx for another raster, port
             Data()
       }, options = list(pageLength=5))
       # knitr server03remainder
+      
+      # about text
+      output$aboutText <- renderText({
+                        "Estre trabalho é realizado em parceria pelo LREC e MJInovação
+                        "
+      })
 }
 
 shinyApp(ui, server)
