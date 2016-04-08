@@ -10,7 +10,7 @@ corr = 1
 corr_vars = c("z")
 
 #extract only stations choords data? 0=No 1=Yes
-stat_coords = 1
+stat_coords = 0
 
 # do you want to crop raster image in kml (if yes, takes 5 times longer to crop)? 0=No 1=Yes
 crop = 1

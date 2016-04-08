@@ -22,7 +22,7 @@ load("output/data.RData")
 source("config.txt")
 source("matrix_rotation.R")
 
-proj <- CRS('+proj=longlat +datum=WGS84')
+proj <- CRS("+proj=longlat +datum=WGS84 +towgs84=-160.410,-21.066,-99.282,2.437,-17.250,-7.446,0.168 +wktext +no_defs ") #CRS('+proj=longlat +datum=WGS84')
 land <- readShapeSpatial("input/map/PRT_adm2.shp", proj4string = proj)
 
 fileNames <- Sys.glob("input/resun/merge/*")

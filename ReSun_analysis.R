@@ -60,7 +60,7 @@ nc <- nc_open(fileNames)
 names(nc$var)               #variav names
 
 #sist. de coordenadas, projecao e coordenadas (N-S, E-O)
-proj <- CRS('+proj=longlat +datum=WGS84')
+proj <- CRS("+proj=longlat +datum=WGS84 +towgs84=-160.410,-21.066,-99.282,2.437,-17.250,-7.446,0.168 +wktext +no_defs ") #CRS('+proj=longlat +datum=WGS84')
 land <- readShapeSpatial("input/map/PRT_adm2.shp", proj4string = proj)
 
 
@@ -685,8 +685,8 @@ if (stat_coords == 0) {
             
       }
       
-      #save objects for shiny app
-      save(m_D02, x_D02, locs, d, d_tot, raster_IGPH, raster_Kt, raster_IDIF, raster_IDIR, raster_DIFGPH, rgb.palette.rad, max_IGPH, months_name, file = "output/data.RData")
+      #save objects for shiny app & static paper
+      save(long, lat, hgt, m_D02, x_D02, locs, d, d_tot, IGPH, Kt, raster_IGPH, raster_Kt, raster_IDIF, raster_IDIR, raster_DIFGPH, rgb.palette.rad, max_IGPH, months_name, file = "output/data.RData")
 }
 #save objects for shiny app
 save(locs, d, d_tot, file = "output/data_coords.RData")

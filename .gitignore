@@ -8,6 +8,7 @@ input
 output
 www
 rsconnect
+report_paper/ReSun
 .RData
 .Rhistory
 wgrib2
