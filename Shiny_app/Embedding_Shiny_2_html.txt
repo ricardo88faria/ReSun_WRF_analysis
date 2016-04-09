@@ -1,0 +1,1 @@
+<iframe src="http://glimmer.rstudio.com/stla/3Dsliced/" style="border: none; width: 500px; height: 700px"></iframe>
