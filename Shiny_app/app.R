@@ -82,7 +82,8 @@ ui <- bootstrapPage( #theme = shinytheme("journal"),
       bsModal("abouttext", "Sobre o Atlas Solar", "about", 
               HTML(markdownToHTML(fragment.only=TRUE, text=c(
                     "Estre trabalho é realizado em parceria pelo LREC e MJInovação, com a utilização do software WRF e ReSun.
-            Autor: Ricardo Faria"
+            
+                    Autor: Ricardo Faria"
               )))
       ),
       
@@ -108,14 +109,20 @@ server <- function(input, output, session) { # added ps for another raster, port
       pal_legend <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), bins = ras_vals(), na.color="transparent", alpha = F) }) 
       
       output$Map <- renderLeaflet({ 
-            leaflet() %>% setView(lon, lat, 10) %>% addTiles() %>%
+            leaflet() %>% 
+                  setView(lon, lat, 10) %>% 
+                  addTiles() %>% 
+                  #addWMSTiles("http://www.lrec.pt/", attribution = "Mapa Rad. Solar Global © 2015, LREC, MJInovação") %>%
+                  addPolygons(raster_IGPH$IGPH_tot, lng = long, lat = lati, opacity=0.9) %>%
+                  addProviderTiles("OpenTopoMap") %>% # modify thebackground map "Esri.WorldImagery"
                   addCircleMarkers(data=locs, radius=6, color="black", stroke=FALSE, fillOpacity=0.5, group="locations", layerId = ~loc)
       })
       
       observe({
             proxy <- leafletProxy("Map")
             # proxy %>% addRasterImage(ras(), colors=pal(), opacity=input$opac) %>% addRasterImage(ras_ps(), colors=pal(), opacity=input$opac)
-            proxy %>% removeTiles(layerId="raster") %>% addRasterImage(ras(), colors=pal(), opacity=input$opac, layerId="raster") %>% addRasterImage(ras_ps(), colors=pal(), opacity=input$opac, layerId="porto_santo")
+            proxy %>% removeTiles(layerId="raster") %>% #addPopups(ras()) %>% 
+                  addRasterImage(ras(), colors=pal(), opacity=input$opac, layerId="raster") %>% addRasterImage(ras_ps(), colors=pal(), opacity=input$opac, layerId="porto_santo")
       })
       
       
