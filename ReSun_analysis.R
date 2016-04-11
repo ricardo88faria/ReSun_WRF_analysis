@@ -130,32 +130,31 @@ if (corr == 1) {
 fix_var <- intersect(corr_vars, c("z", "lat", "lon"))
 fix_var_tmp <- c("hgt", "lat", "long")
 corr_fix <- c()
-
 if (corr == 1) {
       for (i in 1:length(fix_var)) {
             
             #corr_IGPH[[i]] <- ncvar_get(nc)[,,8]
             
             # dominio D02
-            m_D02 <- corr_values[c("m_D02"), c(corr_vars[i])]
-            x_D02 <- corr_values[c("x_D02"), c(corr_vars[i])]
+            #m_D02 <- corr_values[c("m_D02"), c(corr_vars[i])]
+            #x_D02 <- corr_values[c("x_D02"), c(corr_vars[i])]
             
-            corr_fix[[paste0(fix_var[i], "_D02")]] <- x_D02 + m_D02*get(fix_var_tmp[i])
-            
+            #corr_fix[[paste0(fix_var[i], "_D02")]] <- x_D02 + m_D02*get(fix_var_tmp[i])
+
             # dominio D03
             m_D03 <- corr_values[c("m_D03"), c(corr_vars[i])]
             x_D03 <- corr_values[c("x_D03"), c(corr_vars[i])]
             
-            corr_fix[[paste0(fix_var[i], "_D03")]] <- x_D03 + m_D03*get(fix_var_tmp[i])
-            
+            corr_fix[[paste0(fix_var[i], "_D03")]] <- x_D03 + m_D03*get(fix_var_tmp[i])#
+
             if (corr_vars[i] == "lat") {
                   
-                  corr_fix[[paste0(fix_var[i], "_D02")]] <- matrix(data = corr_fix$lat, nrow = nrow(hgt), ncol = ncol(hgt), byrow = F)
+            #      corr_fix[[paste0(fix_var[i], "_D02")]] <- matrix(data = corr_fix$lat, nrow = nrow(hgt), ncol = ncol(hgt), byrow = F)
                   corr_fix[[paste0(fix_var[i], "_D03")]] <- matrix(data = corr_fix$lat, nrow = nrow(hgt), ncol = ncol(hgt), byrow = F)
                   
             } else if (corr_vars[i] == "lon") {
                   
-                  corr_fix[[paste0(fix_var[i], "_D02")]] <- matrix(data = corr_fix$lon, nrow = nrow(hgt), ncol = ncol(hgt), byrow = T)
+            #      corr_fix[[paste0(fix_var[i], "_D02")]] <- matrix(data = corr_fix$lon, nrow = nrow(hgt), ncol = ncol(hgt), byrow = T)
                   corr_fix[[paste0(fix_var[i], "_D03")]] <- matrix(data = corr_fix$lon, nrow = nrow(hgt), ncol = ncol(hgt), byrow = T)
                   
             }
@@ -203,19 +202,17 @@ for (i in 1:length(fileNames)){
             for (j in 1:length(fix_var)) {
                   
                   # i >= 1 & i <= 13 equivalente ao dominio D02
-                  if (i == 1) {
+                  #if (i == 1) {
+                  #      m <- corr_values[c("m_D02"),c(fix_var[j])]
+                  #      x <- corr_values[c("x_D02"),c(fix_var[j])]
                         
-                        m <- corr_values[c("m_D02"),c(fix_var[j])]
-                        x <- corr_values[c("x_D02"),c(fix_var[j])]
+                  #      corr_fix[[paste0(fix_var[j], "_D02")]] <- x + m*Kt[[i]]
                         
-                        corr_fix[[paste0(fix_var[j], "_D02")]] <- x + m*Kt[[i]]
-                        
-                        IGPH_corr[[1]] <- IGPH[[1]] * (1 - (corr_fix[[paste0(fix_var[j], "_D02")]] + corr_fix_fix)/100)
-                        #IGPH_corr[[i]] <- IGPH[[i]] + corr_fix[[paste0(fix_var[j],i)]] + corr_fix_fix
-                        
-                  } 
+                  #      IGPH_corr[[1]] <- IGPH[[1]] * (1 - (corr_fix[[paste0(fix_var[j], "_D02")]] + corr_fix_fix)/100)
+                  #      #IGPH_corr[[i]] <- IGPH[[i]] - corr_fix[[paste0(fix_var[j],i)]] - corr_fix_fix
+                  #} 
                   # i > 13 & i <= 26 equivalente ao dominio D03
-                  else if (i == 14 ) {
+                  if (i == 1 ) {
                         
                         m <- corr_values[c("m_D03"),c(fix_var[j])]
                         x <- corr_values[c("x_D03"),c(fix_var[j])]
@@ -223,7 +220,7 @@ for (i in 1:length(fileNames)){
                         corr_fix[[paste0(fix_var[j], "_D03")]] <- x + m*Kt[[i]]
                         
                         IGPH_corr[[2]] <- IGPH[[2]] * (1 - (corr_fix[[paste0(fix_var[j], "_D03")]] + corr_fix_fix)/100)
-                        #IGPH_corr[[i]] <- IGPH[[i]] + corr_fix[[paste0(fix_var[j],i)]] + corr_fix_fix
+                        #IGPH_corr[[i]] <- IGPH[[i]] - corr_fix[[paste0(fix_var[j],i)]] - corr_fix_fix
                         
                   }
                   
@@ -233,9 +230,9 @@ for (i in 1:length(fileNames)){
             
             IGPH_corr[[i]] <- IGPH[[i]] * (1 - (corr_fix_fix)/100)
             
-      } else if (i == 14 & corr == 1 & length(fix_var) == 0) {
+      #} else if (i == 14 & corr == 1 & length(fix_var) == 0) {
             
-            IGPH_corr[[2]] <- IGPH[[i]] * (1 - (corr_fix_fix)/100)
+      #      IGPH_corr[[2]] <- IGPH[[i]] * (1 - (corr_fix_fix)/100)
             
       }
       
@@ -256,14 +253,14 @@ for (i in 1:length(fileNames)){
 }
 
 #retirar valores das cooredenadas das estacoes de entrada
-for (i in 1:(length(fileNames)/2)){ 
+for (i in 1:length(fileNames)){ 
       for (l in 1:length(lat_index)) {
             
             if (i == 1 & corr == 1) { 
                   
-                  #d_tot <- rbind(d_tot ,c(Location = levels(locs$loc)[l], value = IGPH_corr[[i]][lat_index[l], long_index[l]], Month = "TMY_corr"))
+                  d_tot <- rbind(d_tot ,c(Location = levels(locs$loc)[l], value = IGPH_corr[[1]][lat_index[l], long_index[l]], Month = "TMY_corr"))
                   
-                  d_tot <- rbind(d_tot ,c(Location = levels(locs$loc)[l], value = (IGPH_corr[[1]][lat_index[l], long_index[l]] + IGPH_corr[[2]][lat_index[l], long_index[l]])/2, Month = "TMY_corr"))
+                  #d_tot <- rbind(d_tot ,c(Location = levels(locs$loc)[l], value = (IGPH_corr[[1]][lat_index[l], long_index[l]] + IGPH_corr[[1]][lat_index[l], long_index[l]])/2, Month = "TMY_corr"))
                   
             }
             
@@ -273,15 +270,15 @@ for (i in 1:(length(fileNames)/2)){
             if (i == 1) {    
                   
                   #d <- rbind(d ,c(Location = levels(locs$loc)[l], value = IGPH_corr[[i]][lat_index[l], long_index[l]], Month = "tot_corr"))
-                  #d_tot <- rbind(d_tot ,c(Location = levels(locs$loc)[l], value = IGPH[[1]][lat_index[l], long_index[l]], Month = months_name[1]))
+                  d_tot <- rbind(d_tot ,c(Location = levels(locs$loc)[l], value = IGPH[[1]][lat_index[l], long_index[l]], Month = months_name[1]))
                   
-                  d_tot <- rbind(d_tot ,c(Location = levels(locs$loc)[l], value = (IGPH[[1]][lat_index[l],long_index[l]] + IGPH[[1 + 13]][lat_index[l], long_index[l]])/2, Month = months_name[1]))
+                  #d_tot <- rbind(d_tot ,c(Location = levels(locs$loc)[l], value = (IGPH[[1]][lat_index[l],long_index[l]] + IGPH[[1 + 13]][lat_index[l], long_index[l]])/2, Month = months_name[1]))
                   
             } else if (i >= 2 & i <= length(fileNames)){ #if (i >= 2 & i <= length(fileNames))
                   
-                  #d <- rbind(d ,c(Location = levels(locs$loc)[l], value = IGPH[[i]][lat_index[l], long_index[l]], Month = months_name[i]))
+                  d <- rbind(d ,c(Location = levels(locs$loc)[l], value = IGPH[[i]][lat_index[l], long_index[l]], Month = months_name[i]))
                   
-                  d <- rbind(d ,c(Location = levels(locs$loc)[l], value = (IGPH[[i]][lat_index[l], long_index[l]] + IGPH[[i + length(fileNames)/2]][lat_index[l], long_index[l]])/2, Month = months_name[i]))
+                  #d <- rbind(d ,c(Location = levels(locs$loc)[l], value = (IGPH[[i]][lat_index[l], long_index[l]] + IGPH[[i + length(fileNames)/2]][lat_index[l], long_index[l]])/2, Month = months_name[i]))
                   
             }
             
@@ -289,37 +286,28 @@ for (i in 1:(length(fileNames)/2)){
 }
 
 #separar dominio D02 e D03 e faxer media dos 2 contando com os fatores de correcao
-for (i in 1:(length(fileNames)/2)) {
+#for (i in 1:(length(fileNames)/2)) {
+#      if (i == 1 & corr == 1) {
+#            IGPH_corr[[1]] <- (IGPH_corr[[1]] + IGPH_corr[[2]])/2
+#      }
+#      IGPH[[i]] <- (IGPH[[i]] + IGPH[[i + length(fileNames)/2]])/2
+#      Kt[[i]] <- (Kt[[i]] + Kt[[i + length(fileNames)/2]])/2
+#      IDIR[[i]] <- (IDIR[[i]] + IDIR[[i + length(fileNames)/2]])/2
+#      IDIF[[i]] <- (IDIF[[i]] + IDIF[[i + length(fileNames)/2]])/2
+#      DIFGPH[[i]] <- (DIFGPH[[i]] + DIFGPH[[i + length(fileNames)/2]])/2
+#}
       
-      if (i == 1 & corr == 1) {
-            
-            IGPH_corr[[1]] <- (IGPH_corr[[1]] + IGPH_corr[[2]])/2
-            
-      }
-      
-      IGPH[[i]] <- (IGPH[[i]] + IGPH[[i + length(fileNames)/2]])/2
-      Kt[[i]] <- (Kt[[i]] + Kt[[i + length(fileNames)/2]])/2
-      IDIR[[i]] <- (IDIR[[i]] + IDIR[[i + length(fileNames)/2]])/2
-      IDIF[[i]] <- (IDIF[[i]] + IDIF[[i + length(fileNames)/2]])/2
-      DIFGPH[[i]] <- (DIFGPH[[i]] + DIFGPH[[i + length(fileNames)/2]])/2
-      
-}
 # remover resto das matrizes nao necessarias para libertar espaco
-for (i in 1:(length(fileNames)/2)) {
-      
-      if (i == 1 & corr == 1) {
-            
-            IGPH_corr[[2]] <- NULL
-            
-      }
-      
-      IGPH[[length(fileNames)/2]] <- NULL
-      Kt[[length(fileNames)/2]] <- NULL
-      IDIR[[length(fileNames)/2]] <- NULL
-      IDIF[[length(fileNames)/2]] <- NULL
-      DIFGPH[[length(fileNames)/2]] <- NULL
-      
-}
+#for (i in 1:(length(fileNames)/2)) {
+#      if (i == 1 & corr == 1) {
+#            IGPH_corr[[2]] <- NULL
+#      }
+#      IGPH[[length(fileNames)/2]] <- NULL
+#      Kt[[length(fileNames)/2]] <- NULL
+#      IDIR[[length(fileNames)/2]] <- NULL
+#      IDIF[[length(fileNames)/2]] <- NULL
+#      DIFGPH[[length(fileNames)/2]] <- NULL
+#}
 
 # passar IGHP_tot_corr par a primeira matriz do IGHP
 if (corr == 1) {
@@ -405,7 +393,7 @@ if (stat_coords == 0) {
       # !!!!!!!!!! for (i in (1:length(variavs))[-2]) { print(i) } !!!!!!!!!!!
       
       system.time(
-            for (i in 1:(length(fileNames)/2)){      
+            for (i in 1:length(fileNames)){      
                   
                   temp <- raster(mat_rot(mat_rot(mat_rot(t(IGPH[[i]])))), 
                                  xmn = long_min, xmx = long_max, ymn = lat_min, ymx = lat_max, CRS("+proj=longlat +datum=WGS84"))
