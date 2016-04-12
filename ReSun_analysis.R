@@ -214,8 +214,8 @@ for (i in 1:length(fileNames)){
                   # i > 13 & i <= 26 equivalente ao dominio D03
                   if (i == 1 ) {
                         
-                        m <- corr_values[c("m_D03"),c(fix_var[j])]
-                        x <- corr_values[c("x_D03"),c(fix_var[j])]
+                        m <- corr_values[c("m_D03"), c(fix_var[j])]
+                        x <- corr_values[c("x_D03"), c(fix_var[j])]
                         
                         corr_fix[[paste0(fix_var[j], "_D03")]] <- x + m*Kt[[i]]
                         
@@ -446,14 +446,14 @@ if (stat_coords == 0) {
       rm(temp)
       
       
-      IGPH <- array(unlist(IGPH), dim=c(nrows, ncols, (length(fileNames)/2)))
+      IGPH <- array(unlist(IGPH), dim=c(nrows, ncols, length(fileNames)))
       if (corr == 1) {
-            IGPH_corr <- array(unlist(IGPH_corr), dim=c(nrows, ncols, (length(fileNames)/2)))
+            IGPH_corr <- array(unlist(IGPH_corr), dim=c(nrows, ncols, length(fileNames)))
       }
-      IDIR <- array(unlist(IDIR), dim=c(nrows, ncols, (length(fileNames)/2)))
-      IDIF <- array(unlist(IDIF), dim=c(nrows, ncols, (length(fileNames)/2)))
-      DIFGPH <- array(unlist(DIFGPH), dim=c(nrows, ncols, (length(fileNames)/2)))
-      Kt <- array(unlist(Kt), dim=c(nrows, ncols, (length(fileNames)/2)))
+      IDIR <- array(unlist(IDIR), dim=c(nrows, ncols, length(fileNames)))
+      IDIF <- array(unlist(IDIF), dim=c(nrows, ncols, length(fileNames)))
+      DIFGPH <- array(unlist(DIFGPH), dim=c(nrows, ncols, length(fileNames)))
+      Kt <- array(unlist(Kt), dim=c(nrows, ncols, length(fileNames)))
       
       #IGPH <- matrix(IGPH)
       #IDIR <- matrix(IDIR)
@@ -478,7 +478,7 @@ if (stat_coords == 0) {
       
       # passar os rasters para RasterBrickTimeSeries class
       raster_IGPH <- brick(raster_IGPH)
-      names(raster_IGPH) <- paste0("IGPH_", months_name[1:(length(fileNames)/2)])
+      names(raster_IGPH) <- paste0("IGPH_", months_name[1:length(fileNames)])
       #raster_IGPH_test <- new("RasterBrickTimeSeries", variable = "IGPH", 
       #                   sampled = pnts, rasters = raster_IGPH, TimeSpan.begin = tS_i, TimeSpan.end = tS_f)
       
@@ -486,34 +486,34 @@ if (stat_coords == 0) {
             raster_IGPH_corr <- brick(raster_IGPH_corr)
             names(raster_IGPH_corr) <- paste0("IGPH_", months_name[1])
             #      raster_IGPH_corr <- new("RasterBrickTimeSeries", variable = "IGPH_corr", 
-            #                              sampled = pnts, rasters = raster_IGPH_corr, TimeSpan.begin = Times[1:(length(fileNames)/2)], TimeSpan.end = Times[1:(length(fileNames)/2)])
+            #                              sampled = pnts, rasters = raster_IGPH_corr, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
       }
       
       raster_IDIR <- brick(raster_IDIR)
-      names(raster_IDIR) <- paste0("IDIR_", months_name[1:(length(fileNames)/2)])
+      names(raster_IDIR) <- paste0("IDIR_", months_name[1:length(fileNames)])
       #raster_IDIR <- new("RasterBrickTimeSeries", variable = "IDIR", 
-      #                   sampled = pnts, rasters = raster_IDIR, TimeSpan.begin = Times[1:(length(fileNames)/2)], TimeSpan.end = Times[1:(length(fileNames)/2)])
+      #                   sampled = pnts, rasters = raster_IDIR, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
       
       raster_IDIF <- brick(raster_IDIF)
-      names(raster_IDIF) <- paste0("IDIF_", months_name[1:(length(fileNames)/2)])
+      names(raster_IDIF) <- paste0("IDIF_", months_name[1:length(fileNames)])
       #raster_IDIF <- new("RasterBrickTimeSeries", variable = "IDIF", 
-      #                   sampled = pnts, rasters = raster_IDIF, TimeSpan.begin = Times[1:(length(fileNames)/2)], TimeSpan.end = Times[1:(length(fileNames)/2)])
+      #                   sampled = pnts, rasters = raster_IDIF, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
       
       raster_DIFGPH <- brick(raster_DIFGPH)
-      names(raster_DIFGPH) <- paste0("DIFGPH_", months_name[1:(length(fileNames)/2)])
+      names(raster_DIFGPH) <- paste0("DIFGPH_", months_name[1:length(fileNames)])
       #raster_DIFGPH <- new("RasterBrickTimeSeries", variable = "DIFGPH", 
-      #                     sampled = pnts, rasters = raster_DIFGPH, TimeSpan.begin = Times[1:(length(fileNames)/2)], TimeSpan.end = Times[1:(length(fileNames)/2)])
+      #                     sampled = pnts, rasters = raster_DIFGPH, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
       
       raster_Kt <- brick(raster_Kt)
-      names(raster_Kt) <- paste0("Kt_", months_name[1:(length(fileNames)/2)])
+      names(raster_Kt) <- paste0("Kt_", months_name[1:length(fileNames)])
       #raster_Kt <- new("RasterBrickTimeSeries", variable = "Kt", 
-      #                 sampled = pnts, rasters = raster_Kt, TimeSpan.begin = Times[1:(length(fileNames)/2)], TimeSpan.end = Times[1:(length(fileNames)/2)])
+      #                 sampled = pnts, rasters = raster_Kt, TimeSpan.begin = Times[1:length(fileNames)], TimeSpan.end = Times[1:length(fileNames)])
       
-      #raster_IGPH <- rts(stack(raster_IGPH), seq_time[1:(length(fileNames)/2)])
-      #raster_IDIR <- rts(stack(raster_IDIR), seq_time[1:(length(fileNames)/2)])
-      #raster_IDIF <- rts(stack(raster_IDIF), seq_time[1:(length(fileNames)/2)])
-      #raster_DIFGPH <- rts(stack(raster_DIFGPH), seq_time[1:(length(fileNames)/2)])
-      #raster_Kt <- rts(stack(raster_Kt), seq_time[1:(length(fileNames)/2)])
+      #raster_IGPH <- rts(stack(raster_IGPH), seq_time[1:length(fileNames)])
+      #raster_IDIR <- rts(stack(raster_IDIR), seq_time[1:length(fileNames)])
+      #raster_IDIF <- rts(stack(raster_IDIF), seq_time[1:length(fileNames)])
+      #raster_DIFGPH <- rts(stack(raster_DIFGPH), seq_time[1:length(fileNames)])
+      #raster_Kt <- rts(stack(raster_Kt), seq_time[1:length(fileNames)])
       
       
       message("creating png images - takes time")
@@ -531,9 +531,9 @@ if (stat_coords == 0) {
             if (png_out == 1) {
                   message("creating png files - ", variavs[j])
                   
-                  pb <- txtProgressBar(min = 0, max = (length(fileNames)/2), style = 3, title = paste0(variavs[j]))
+                  pb <- txtProgressBar(min = 0, max = length(fileNames), style = 3, title = paste0(variavs[j]))
                   
-                  for (i in 1:(length(fileNames)/2)) {
+                  for (i in 1:length(fileNames)) {
                         ##filled contour grafs
                         
                         variav_name <- paste0(variavs[j])
@@ -587,41 +587,40 @@ if (stat_coords == 0) {
       if (nc_out == 1) {
             message("creating netcdf files")
             
-            IGPH_tot = list()
+            #IGPH_tot = list()
             IGPH_tot_corr = list()
             #transpose variavs matrixes
-            for (i in 2:(length(fileNames)/2)) {
+            #IGPH_tot[[i-1]] <- t(IGPH[,,1])
+            if (corr == 1) {
+                  IGPH_tot_corr[[1]] <- t(IGPH_corr[,,1])
+            }
+            for (i in 2:length(fileNames)) {
                   
                   IGPH[,,i] <- t(IGPH[,,i])
-                  
-                  IGPH_tot[[i-1]] <- t(IGPH[,,1])
-                  if (corr == 1) {
-                        IGPH_tot_corr[[i-1]] <- t(IGPH_corr[,,1])
-                  }
-                  
                   IDIR[,,i] <- t(IDIR[,,i])
                   IDIF[,,i] <- t(IDIF[,,i])
                   DIFGPH[,,i] <- t(DIFGPH[,,i])
                   Kt[,,i] <- t(Kt[,,i])
             }
-            IGPH_tot <- array(unlist(IGPH_tot), dim=c(nrows, ncols, ((length(fileNames)/2)) -1))
-            IGPH_tot_corr <- array(unlist(IGPH_tot_corr), dim=c(nrows, ncols, ((length(fileNames)/2)) - 1))
+            #IGPH_tot <- array(unlist(IGPH_tot), dim=c(nrows, ncols, (length(fileNames) -1)))
+            IGPH_tot_corr <- array(unlist(IGPH_tot_corr), dim=c(nrows, ncols, 1))
             
             
             #define dimensions
             nc_londim <- ncdim_def(name = "lon", units = "degrees_east", vals = long) 
             nc_latdim <- ncdim_def(name = "lat", units = "degrees_north", vals = lat) 
             nc_monthdim <- ncdim_def(name = "month", units = "month_year", vals = as.numeric(format(tS_i, "%m")))
+            nc_totdim <- ncdim_def(name = "tot", units = "total", vals = as.numeric(0))
             
             #define variables
             nc_hgt <- ncvar_def(name = "hgt", units = "m", dim = list(nc_londim, nc_latdim), prec = "single")
             
             nc_IGPH <- ncvar_def(name = "IGPH", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
-            nc_IGPH_tot <- ncvar_def(name = "IGPH_tot", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
+            #nc_IGPH_tot <- ncvar_def(name = "IGPH_tot", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_totdim), prec = "single")
             
             if (corr == 1) {
                   
-                  nc_IGPH_tot_corr <- ncvar_def(name = "IGPH_tot_corr", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_monthdim), prec = "single")
+                  nc_IGPH_tot_corr <- ncvar_def(name = "IGPH_tot_corr", units = "w/m^2", dim = list(nc_londim, nc_latdim, nc_totdim), prec = "single")
                   
             }
             
@@ -634,11 +633,11 @@ if (stat_coords == 0) {
             nc_name <- paste("output/nc/ReSun_", local, ".nc", sep = "")
             if (corr == 1) {
                   
-                  ncout <- nc_create(filename = nc_name, vars = list(nc_hgt, nc_IGPH_tot, nc_IGPH_tot_corr, nc_IGPH, nc_IDIR, nc_IDIF, nc_DIFGPH, nc_Kt), force_v4 = T, verbose = F)
+                  ncout <- nc_create(filename = nc_name, vars = list(nc_hgt, nc_IGPH_tot_corr, nc_IGPH, nc_IDIR, nc_IDIF, nc_DIFGPH, nc_Kt), force_v4 = T, verbose = F)
                   
             } else {
                   
-                  ncout <- nc_create(filename = nc_name, vars = list(nc_hgt, nc_IGPH_tot, nc_IGPH, nc_IDIR, nc_IDIF, nc_DIFGPH, nc_Kt), force_v4 = T, verbose = F)
+                  ncout <- nc_create(filename = nc_name, vars = list(nc_hgt, nc_IGPH, nc_IDIR, nc_IDIF, nc_DIFGPH, nc_Kt), force_v4 = T, verbose = F)
                   
             }
             
@@ -646,7 +645,7 @@ if (stat_coords == 0) {
             ncvar_put(ncout, nc_hgt, t(hgt))
             
             ncvar_put(ncout, nc_IGPH, IGPH[,,2:13])
-            ncvar_put(ncout, nc_IGPH_tot, IGPH_tot)
+            #ncvar_put(ncout, nc_IGPH_tot, IGPH_tot)
             
             if (corr == 1) {
                   
@@ -662,7 +661,7 @@ if (stat_coords == 0) {
             ncatt_put(ncout, "lon", "axis", "X") #,verbose=FALSE) #,definemode=FALSE)
             ncatt_put(ncout, "lat", "axis", "Y")
             ncatt_put(ncout, "month", "axis", "T")
-            #ncatt_put(ncout, "hour", "axis", "T")
+            ncatt_put(ncout, "tot", "axis", "T")
             
             #add global attributes
             #ncatt_put(ncout,0,"title","Shadow median per Julian day")
@@ -674,7 +673,7 @@ if (stat_coords == 0) {
       }
       
       #save objects for shiny app & static paper
-      save(long, lat, hgt, m_D02, x_D02, locs, d, d_tot, IGPH, Kt, raster_IGPH, raster_Kt, raster_IDIF, raster_IDIR, raster_DIFGPH, rgb.palette.rad, max_IGPH, months_name, file = "output/data.RData")
+      save(long, lat, hgt, locs, d, d_tot, IGPH, Kt, raster_IGPH, raster_Kt, raster_IDIF, raster_IDIR, raster_DIFGPH, rgb.palette.rad, max_IGPH, months_name, file = "output/data.RData")
 }
 #save objects for shiny app
 save(locs, d, d_tot, file = "output/data_coords.RData")
