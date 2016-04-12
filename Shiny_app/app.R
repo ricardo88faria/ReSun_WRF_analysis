@@ -173,7 +173,7 @@ server <- function(input, output, session) { # added ps for another raster, port
       
       # Observe mouse clicks and add circles
       observeEvent(input$Map_click, {
-            ## Get the click info like had been doing
+            # Get the click info
             click <- input$Map_click
             clat <- round(click$lat, digits = 4)
             clng <- round(click$lng, digits = 4)
@@ -187,10 +187,8 @@ server <- function(input, output, session) { # added ps for another raster, port
                                   rad_val, "[W/m2]",
                                   "<br><span style='color: salmon;'><strong>Altura do nível do mar: </strong></span>",
                                   hgt_val, "[m]")
-            ## Add the circle to the map proxy
-            ## so you dont need to re-render the whole thing
-            ## I also give the circles a group, "circles", so you can
-            ## then do something like hide all the circles with hideGroup('circles')
+            # Add the circle to the map proxy
+            # option to hideGroup('circles')
             proxy <- leafletProxy("Map") # use the proxy to save computation
             proxy %>% addCircles(lng=clng, lat=clat, group='locations',
                                  weight=5, radius=100, color='black', fillColor='blue',
