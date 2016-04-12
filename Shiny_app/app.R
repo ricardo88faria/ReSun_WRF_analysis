@@ -9,12 +9,14 @@ library(leaflet)
 library(ggplot2)
 library(markdown)
 library(httr)
+library(reshape2)
 
 
 
 load("data/data.RData") # output/
 load("data/data_coords.RData")
 load("data/data_merge.RData")
+source("../matrix_rotation.R")
 lati <- lat
 
 #decades <- seq_time
@@ -39,6 +41,18 @@ ps <- raster_IGPH_merg
 
 #maxIGPH <- round(max(as.numeric(max_IGPH)+5),-1)
 
+#popup
+# test : 
+#mat_test <- t(matrix(raster_IGPH$IGPH_tot[], ncol = raster_IGPH@ncols, nrow = raster_IGPH@nrows, byrow = T))
+
+# matrix to data.frame
+dimnames(hgt) = list(lati, long)
+hgt_melt <- melt(hgt)
+
+popup_test <- paste0("<span style='color: #7f0000'><strong>Valor da Radiação anual com a correção TMY no ponto selecionado.</strong></span>", 
+                     "<br><span style='color: salmon;'><strong>Radiação Global [W/m2]: </strong></span>",
+                     hgt_melt$value)
+
 # knitr ui
 ui <- bootstrapPage( #theme = shinytheme("journal"),
       tags$style( "html, body {width:100%;height:100%}"), #type="text/css",
@@ -48,7 +62,7 @@ ui <- bootstrapPage( #theme = shinytheme("journal"),
                                 animate = animationOptions(interval = 2500, loop = F)), # , post=" Mês"  , playButton = "PLAY", pauseButton = "PAUSA"
                     checkboxInput("EMAS", "Mostrar EMAS", TRUE),
                     checkboxInput("legend", "Mostrar legenda", TRUE), # NEW LINE
-                    sliderInput("opac", "Opacitade do Raster", min=0, max=1, value=.8, step=.1, sep=""), # para opacidade
+                    sliderInput("opac", "Opacitade do Raster", min=0, max=1, value=.6, step=.1, sep=""), # para opacidade
                     conditionalPanel("input.EMAS == true",
                                      selectInput("location", "Localização das EMAS", c("", levels(locs$loc)), selected=""),
                                      conditionalPanel("input.location !== null && input.location !== ''",
@@ -98,6 +112,8 @@ server <- function(input, output, session) { # added ps for another raster, port
       acm_defaults <- function(map, x, y) addCircleMarkers(map, x, y, radius=6, color="black", fillColor="orange", fillOpacity=1, opacity=1, weight=2, stroke=TRUE, layerId="Selected")
       
       ras <- reactive({ subset(x, which(seq_time==input$date)) })
+      #hgt_polylines <- reactive({ hgt_melt })
+      ras_ploy <- reactive({ hgt_melt })
       ras_ps <- reactive({ subset(ps, which(seq_time==input$date)) })
       ras_vals <- reactive({ c(seq(round(min(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), round(max(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), 10)) }) #c(0, maxIGPH)
       
@@ -112,8 +128,9 @@ server <- function(input, output, session) { # added ps for another raster, port
             leaflet() %>% 
                   setView(lon, lat, 10) %>% 
                   addTiles() %>% 
-                  #addWMSTiles("http://www.lrec.pt/", attribution = "Mapa Rad. Solar Global © 2015, LREC, MJInovação") %>%
-                  addPolygons(raster_IGPH$IGPH_tot, lng = long, lat = lati, opacity=0.9) %>%
+                  #addWMSTiles("http://www.lrec.pt/", attribution = "Mapa Rad. Solar © 2015 - Ricardo Faria, LREC, MJInovação") %>%
+                  addPolygons(ras_ploy(), lng = long, lat = lati, opacity=0.9, popup = popup_test) %>%
+                  #addPolylines(hgt_polylines(), lng = long, lat = lati, color = "red") %>% 
                   addProviderTiles("OpenTopoMap") %>% # modify thebackground map "Esri.WorldImagery"
                   addCircleMarkers(data=locs, radius=6, color="black", stroke=FALSE, fillOpacity=0.5, group="locations", layerId = ~loc)
       })
