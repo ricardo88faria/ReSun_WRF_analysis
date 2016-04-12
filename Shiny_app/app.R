@@ -84,13 +84,13 @@ ui <- bootstrapPage( #theme = shinytheme("journal"),
       
       absolutePanel(bottom = 5, left = 5, width = 700, draggable = TRUE,
                     wellPanel(
-                          HTML(markdownToHTML(fragment.only=TRUE, text=c(
+                          HTML(markdownToHTML(fragment.only=TRUE,title = T, text=c(
                                 "Notas:
-                                * O intante Mês 0, corresponde à média anual do TMY ajustado com as medições.
-                                * Os valores mensais são representados sem correção, uma vez que a correção foi aplicada à média anual.
-                                * Os meses que compõem o Ano Meteorológico Tipico a simular com o ReSun tiveram por base 10 anos medidos na sua estimativa.
-                                * EMAS (Estações Meteorológicas Automáticas).
-                                * Clique num ponto no mapa para ver mais detalhes sobre esse ponto."
+                                1- O intante Mês 0, corresponde à média anual do TMY ajustado com as medições.
+                                2- Os valores mensais são representados sem correção, uma vez que a correção foi aplicada à média anual.
+                                3- Os meses que compõem o Ano Meteorológico Tipico a simular com o ReSun tiveram por base 10 anos medidos na sua estimativa.
+                                4- EMAS (Estações Meteorológicas Automáticas).
+                                5- Clique num ponto no mapa para ver mais detalhes sobre esse ponto."
                           ))), actionButton("about", "Sobre", class="btn-block")
                           ),
                     style = "opacity: 0.9"
@@ -98,9 +98,9 @@ ui <- bootstrapPage( #theme = shinytheme("journal"),
       
       bsModal("abouttext", "Sobre o Atlas Solar", "about", 
               HTML(markdownToHTML(fragment.only=TRUE, text=c(
-                    "Estre trabalho é realizado em parceria pelo LREC e MJInovação, com a utilização do software WRF e ReSun.
+                    "Estre trabalho é realizado em parceria pelo LREC e MJInovação, com a utilização do software WRF para modelação climática e o ReSun (Pereira R., 2013), para modelação Solar.
                     
-                    Autor: Ricardo Faria"
+                    Autor do trabalho: Ricardo Faria"
               )))
               ),
       
@@ -181,18 +181,20 @@ server <- function(input, output, session) { # added ps for another raster, port
             rad_val <- round(rad_val, digits = 3)
             hgt_val <- subset(hgt_melt, lat<(clat+0.00045) & lat>(clat-0.00045) & lon<(clng+0.00045) & lon>(clng-0.00045)) # 0.00045 = resolução da matriz = long[2] - long[1]
             hgt_val <- round(hgt_val, digits = 3)
-            #address <- paste0("Morada: ", revgeocode(c(clng,clat)))
-            popup_click <- paste0("<span style='color: #7f0000'><strong>Valor da Radiação anual com a correção TMY no ponto selecionado.</strong></span>", 
+            # html colors #7f0000, #0375DB
+            popup_click <- paste0("<span style='color: #0375DB'><strong>Valor da Radiação anual com a correção TMY no ponto selecionado.</strong></span>", 
                                   "<br><span style='color: salmon;'><strong>Radiação Global anual: </strong></span>",
-                                  rad_val, "[W/m2]",
+                                  rad_val, " [W/m2]",
                                   "<br><span style='color: salmon;'><strong>Altura do nível do mar: </strong></span>",
-                                  hgt_val, "[m]")
+                                  hgt_val, " [m]",
+                                  "<br><span style='color: salmon;'><strong>Coordenadas (Long, Lat): </strong></span>",
+                                  clng, ", ",clat, " [º]")
             # Add the circle to the map proxy
             # option to hideGroup('circles')
             proxy <- leafletProxy("Map") # use the proxy to save computation
             proxy %>% addCircles(lng=clng, lat=clat, group='locations',
                                  weight=5, radius=100, color='black', fillColor='blue',
-                                 popup=popup_click, fillOpacity=1, opacity=1, stroke=T, layerId="Selected")
+                                 popup=popup_click, fillOpacity=1, opacity=1, stroke=T, layerId="Selected") # se retirar o (layerId="Selected") passa a aceitar varios pontos 
       })
       
       # update the map markers and view on map clicks
