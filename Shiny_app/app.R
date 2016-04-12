@@ -9,14 +9,16 @@ library(leaflet)
 library(ggplot2)
 library(markdown)
 library(httr)
-library(reshape2)
+#library(reshape2)
+#library(sp)
+library(ggmap)
 
-
+options(shiny.error=browser)
 
 load("data/data.RData") # output/
 load("data/data_coords.RData")
 load("data/data_merge.RData")
-source("../matrix_rotation.R")
+#source("../matrix_rotation.R")
 lati <- lat
 
 #decades <- seq_time
@@ -41,17 +43,18 @@ ps <- raster_IGPH_merg
 
 #maxIGPH <- round(max(as.numeric(max_IGPH)+5),-1)
 
-#popup
-# test : 
-#mat_test <- t(matrix(raster_IGPH$IGPH_tot[], ncol = raster_IGPH@ncols, nrow = raster_IGPH@nrows, byrow = T))
 
-# matrix to data.frame
+# matrix to data.frame do IGPH, hgt
+# IGPH
+IGPH_melt <- IGPH[,,1]
+dimnames(IGPH_melt) = list(lati, long)
+IGPH_melt <- melt(IGPH_melt)
+colnames(IGPH_melt) <- c("lat", "lon", "val")
+# HGT
 dimnames(hgt) = list(lati, long)
 hgt_melt <- melt(hgt)
+colnames(hgt_melt) <- c("lat", "lon", "val")
 
-popup_test <- paste0("<span style='color: #7f0000'><strong>Valor da Radiação anual com a correção TMY no ponto selecionado.</strong></span>", 
-                     "<br><span style='color: salmon;'><strong>Radiação Global [W/m2]: </strong></span>",
-                     hgt_melt$value)
 
 # knitr ui
 ui <- bootstrapPage( #theme = shinytheme("journal"),
@@ -60,7 +63,7 @@ ui <- bootstrapPage( #theme = shinytheme("journal"),
       absolutePanel(top=10, right=10, draggable = F,
                     sliderInput("date", "Mês", min=min(seq_time), max=max(seq_time), value=seq_time[1], step=1, sep="", 
                                 animate = animationOptions(interval = 2500, loop = F)), # , post=" Mês"  , playButton = "PLAY", pauseButton = "PAUSA"
-                    checkboxInput("EMAS", "Mostrar EMAS", TRUE),
+                    checkboxInput("EMAS", "Mostrar EMAS e pontos", TRUE),
                     checkboxInput("legend", "Mostrar legenda", TRUE), # NEW LINE
                     sliderInput("opac", "Opacitade do Raster", min=0, max=1, value=.6, step=.1, sep=""), # para opacidade
                     conditionalPanel("input.EMAS == true",
@@ -87,7 +90,7 @@ ui <- bootstrapPage( #theme = shinytheme("journal"),
                                 * Os valores mensais são representados sem correção, uma vez que a correção foi aplicada à média anual.
                                 * Os meses que compõem o Ano Meteorológico Tipico a simular com o ReSun tiveram por base 10 anos medidos na sua estimativa.
                                 * EMAS (Estações Meteorológicas Automáticas).
-                                "
+                                * Clique num ponto no mapa para ver mais detalhes sobre esse ponto."
                           ))), actionButton("about", "Sobre", class="btn-block")
                           ),
                     style = "opacity: 0.9"
@@ -96,42 +99,48 @@ ui <- bootstrapPage( #theme = shinytheme("journal"),
       bsModal("abouttext", "Sobre o Atlas Solar", "about", 
               HTML(markdownToHTML(fragment.only=TRUE, text=c(
                     "Estre trabalho é realizado em parceria pelo LREC e MJInovação, com a utilização do software WRF e ReSun.
-            
+                    
                     Autor: Ricardo Faria"
               )))
-      ),
+              ),
       
       bsModal("Plot_and_table", "Gráfico e Tabela", "button_plot_and_table", size = "large",
               plotOutput("TestPlot"),
               #    plotOutput("TestPlot1"),
               dataTableOutput("TestTable"))
-                          )
+              )
 
 # knitr server
 server <- function(input, output, session) { # added ps for another raster, porto santo
       acm_defaults <- function(map, x, y) addCircleMarkers(map, x, y, radius=6, color="black", fillColor="orange", fillOpacity=1, opacity=1, weight=2, stroke=TRUE, layerId="Selected")
       
+      # rasters
       ras <- reactive({ subset(x, which(seq_time==input$date)) })
       #hgt_polylines <- reactive({ hgt_melt })
-      ras_ploy <- reactive({ hgt_melt })
+      #ras_ploy <- reactive({ hgt_melt })
       ras_ps <- reactive({ subset(ps, which(seq_time==input$date)) })
+      
+      # storage of mouse clicks circles locations lat long
+      #dat <- reactiveValues(circs = data.frame(longitude=numeric(), latitude=numeric()))
+      
+      # color pallete bins
       ras_vals <- reactive({ c(seq(round(min(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), round(max(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), 10)) }) #c(0, maxIGPH)
       
-      # color paletes examples
+      # color paletes
       #colorNumeric(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), na.color="transparent")
       #colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), bins = c(0, ras_vals(), Inf), na.color="transparent", alpha = F)
-      
+      #colorBin(c('#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15', '#67000d'), bins = c(0, 5, 8, 10, 12, 14, 18, 24, 26))
       pal <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), bins = c(-Inf, ras_vals(), Inf), na.color="transparent", alpha = F) }) 
       pal_legend <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), bins = ras_vals(), na.color="transparent", alpha = F) }) 
       
       output$Map <- renderLeaflet({ 
             leaflet() %>% 
-                  setView(lon, lat, 10) %>% 
-                  addTiles() %>% 
+                  setView(lng = lon, lat = lat, 10) %>% 
+                  addTiles(options = providerTileOptions(noWrap = TRUE))  %>% 
                   #addWMSTiles("http://www.lrec.pt/", attribution = "Mapa Rad. Solar © 2015 - Ricardo Faria, LREC, MJInovação") %>%
-                  addPolygons(ras_ploy(), lng = long, lat = lati, opacity=0.9, popup = popup_test) %>%
+                  #addPolygons(ras_ploy(), lng = long, lat = lati, opacity=0.9, popup = popup_test) %>%
                   #addPolylines(hgt_polylines(), lng = long, lat = lati, color = "red") %>% 
-                  addProviderTiles("OpenTopoMap") %>% # modify thebackground map "Esri.WorldImagery"
+                  addProviderTiles("OpenTopoMap") %>% # modify thebackground map "Esri.WorldImagery" "OpenTopoMap"
                   addCircleMarkers(data=locs, radius=6, color="black", stroke=FALSE, fillOpacity=0.5, group="locations", layerId = ~loc)
       })
       
@@ -160,6 +169,32 @@ server <- function(input, output, session) { # added ps for another raster, port
                   updateSelectInput(session, "location", selected="")
                   proxy %>% hideGroup("locations") %>% removeMarker(layerId="Selected")
             }
+      })
+      
+      # Observe mouse clicks and add circles
+      observeEvent(input$Map_click, {
+            ## Get the click info like had been doing
+            click <- input$Map_click
+            clat <- round(click$lat, digits = 4)
+            clng <- round(click$lng, digits = 4)
+            rad_val <- subset(IGPH_melt, lat<(clat+0.00045) & lat>(clat-0.00045) & lon<(clng+0.00045) & lon>(clng-0.00045))
+            rad_val <- round(rad_val, digits = 3)
+            hgt_val <- subset(hgt_melt, lat<(clat+0.00045) & lat>(clat-0.00045) & lon<(clng+0.00045) & lon>(clng-0.00045)) # 0.00045 = resolução da matriz = long[2] - long[1]
+            hgt_val <- round(hgt_val, digits = 3)
+            #address <- paste0("Morada: ", revgeocode(c(clng,clat)))
+            popup_click <- paste0("<span style='color: #7f0000'><strong>Valor da Radiação anual com a correção TMY no ponto selecionado.</strong></span>", 
+                                  "<br><span style='color: salmon;'><strong>Radiação Global anual: </strong></span>",
+                                  rad_val, "[W/m2]",
+                                  "<br><span style='color: salmon;'><strong>Altura do nível do mar: </strong></span>",
+                                  hgt_val, "[m]")
+            ## Add the circle to the map proxy
+            ## so you dont need to re-render the whole thing
+            ## I also give the circles a group, "circles", so you can
+            ## then do something like hide all the circles with hideGroup('circles')
+            proxy <- leafletProxy("Map") # use the proxy to save computation
+            proxy %>% addCircles(lng=clng, lat=clat, group='locations',
+                                 weight=5, radius=100, color='black', fillColor='blue',
+                                 popup=popup_click, fillOpacity=1, opacity=1, stroke=T, layerId="Selected")
       })
       
       # update the map markers and view on map clicks
@@ -214,14 +249,7 @@ server <- function(input, output, session) { # added ps for another raster, port
       output$TestTable <- renderDataTable({
             Data()
       }, options = list(pageLength=5))
-      # knitr server03remainder
       
-      # about text
-      #output$aboutText <- renderText({
-      #      "Estre trabalho é realizado em parceria pelo LREC e MJInovação, com a utilização do software WRF e ReSun.
-      #      Autor: Ricardo Faria
-      #      "
-      #})
-      }
+}
 
 shinyApp(ui, server)
