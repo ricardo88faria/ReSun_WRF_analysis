@@ -163,12 +163,26 @@ server <- function(input, output, session) { # added ps for another raster, port
       # color pallete bins
       minmax_vals <- reactive({ 
             if (input$units) {
+                  c(seq(24*min_vals, 24*max_vals)) 
+            } else { 
+                  c(seq(min_vals, max_vals)) 
+            }  
+      }) #c(0, maxIGPH)
+      minmax_vals_leg <- reactive({ 
+            if (input$units) {
                   c(seq(24*min_vals, 24*max_vals, 400)) 
             } else { 
                   c(seq(min_vals, max_vals, 15)) 
-            }  
-      }) #c(0, maxIGPH)
+            } 
+      })
       minmax_vals_anual <- reactive({ 
+            if (input$units) {
+                  c(seq(24*round(min(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), 24*round(max(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1))) 
+            } else { 
+                  c(seq(round(min(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), round(max(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1))) 
+            } 
+      })
+      minmax_vals_anual_leg <- reactive({ 
             if (input$units) {
                   c(seq(24*round(min(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), 24*round(max(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), 240)) 
             } else { 
@@ -188,9 +202,9 @@ server <- function(input, output, session) { # added ps for another raster, port
       #colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), bins = c(0, ras_vals(), Inf), na.color="transparent", alpha = F)
       #colorBin(c('#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15', '#67000d'), bins = c(0, 5, 8, 10, 12, 14, 18, 24, 26))
       pal <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals(), bins = c(-Inf, minmax_vals(), Inf), na.color="transparent", alpha = F) }) 
-      pal_legend <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals(), bins = minmax_vals(), na.color="transparent", alpha = F) }) 
+      pal_legend <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_leg(), bins = minmax_vals_leg(), na.color="transparent", alpha = F) }) 
       pal_anual <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_anual(), bins = c(-Inf, minmax_vals_anual(), Inf), na.color="transparent", alpha = F) }) 
-      pal_legend_anual <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_anual(), bins = minmax_vals_anual(), na.color="transparent", alpha = F) }) 
+      pal_legend_anual <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_anual_leg(), bins = minmax_vals_anual_leg(), na.color="transparent", alpha = F) }) 
       
       output$Map <- renderLeaflet({ 
             leaflet() %>% 
@@ -207,11 +221,11 @@ server <- function(input, output, session) { # added ps for another raster, port
             proxy <- leafletProxy("Map")
             proxy %>% clearControls()
             if (input$legend) {
-                  proxy %>% addLegend(position="bottomleft", pal=pal_legend_anual(), values=minmax_vals_anual(), title=legend_tytle()) %>% # values= seq(50, 220, 5)
+                  proxy %>% addLegend(position="bottomleft", pal=pal_legend_anual(), values=minmax_vals_anual_leg(), title=legend_tytle()) %>% # values= seq(50, 220, 5)
                         addRasterImage(ras(), colors=pal_anual(), opacity=input$opac, layerId="raster") %>% 
                         addRasterImage(ras_ps(), colors=pal_anual(), opacity=input$opac, layerId="porto_santo")
             } else {
-                  proxy %>% addLegend(position="bottomleft", pal=pal_legend(), values=minmax_vals(), title=legend_tytle()) %>% # values= seq(50, 220, 5)
+                  proxy %>% addLegend(position="bottomleft", pal=pal_legend(), values=minmax_vals_leg(), title=legend_tytle()) %>% # values= seq(50, 220, 5)
                         addRasterImage(ras(), colors=pal(), opacity=input$opac, layerId="raster") %>% 
                         addRasterImage(ras_ps(), colors=pal(), opacity=input$opac, layerId="porto_santo")
             }
