@@ -28,18 +28,18 @@ land <- readShapeSpatial("input/map/PRT_adm2.shp", proj4string = proj)
 fileNames <- Sys.glob("input/resun/merge/*")
 
 nc <- nc_open(fileNames[1])
-hgt <- ncvar_get(nc)[,,3]
+hgt_ps <- ncvar_get(nc)[,,3]
 
 lat_min <- min(ncvar_get(nc)[,,2])
 lat_max <- max(ncvar_get(nc)[,,2])
-lat <- unique(as.vector(ncvar_get(nc)[,,2]))
+lat_ps <- unique(as.vector(ncvar_get(nc)[,,2]))
 
 long_min <- min(ncvar_get(nc)[,,1])
 long_max <- max(ncvar_get(nc)[,,1])
-long <- unique(as.vector(ncvar_get(nc)[,,1]))
+long_ps <- unique(as.vector(ncvar_get(nc)[,,1]))
 
-ncols <- length(long)
-nrows <- length(lat)
+ncols <- length(long_ps)
+nrows <- length(lat_ps)
 
 r1 <- raster(xmx = long_max, xmn = long_min, ymx = lat_max, ymn = lat_min, ncols = ncols, nrows = nrows)
 
@@ -62,7 +62,7 @@ for (i in 1:length(fileNames)) {
       
       # correçao
       if (i == 1) {
-            corr_fix <- x_D02 + m_D02*hgt
+            corr_fix <- x_D02 + m_D02*hgt_ps
             IGPH_merg[[1]] <- IGPH_merg[[1]] * (1 - (corr_fix)/100)
       }
       
@@ -177,7 +177,7 @@ names(raster_DIFGPH_merg) <- paste0("DIFGPH_", months_name[1:(length(fileNames))
 raster_Kt_merg <- brick(raster_Kt_merg)
 names(raster_Kt_merg) <- paste0("Kt_", months_name[1:(length(fileNames))])
 
-save(raster_IGPH_merg, file = "output/data_merge.RData")
+save(raster_IGPH_merg, long_ps, lat_ps, IGPH_merg, hgt_ps, file = "output/data_merge.RData")
 
 # raster merge
 #temp1 <- raster_IGPH$IGPH_tot #raster_IGPH[[1]]
