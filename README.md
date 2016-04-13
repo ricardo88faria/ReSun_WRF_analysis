@@ -10,6 +10,9 @@ Work in progress!!!
 
 **Interactive application**
 
+[Solar Atlas Interactive Aplication][1]
+[1]: https://rfaria.shinyapps.io/ReSun_analysis/
+
 <iframe src="https://rfaria.shinyapps.io/ReSun_analysis/" style="border: none; width: 1280px; height: 760px"></iframe>
 
 

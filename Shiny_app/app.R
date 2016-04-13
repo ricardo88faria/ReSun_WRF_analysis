@@ -19,16 +19,17 @@ load("data/data.RData") # output/
 load("data/data_coords.RData")
 load("data/data_merge.RData")
 #source("../matrix_rotation.R")
-lati <- lat
-lat_res <- abs(round((lati[1] - lati[2])/2, digits = 5))
+
+lat_res <- abs(round((lat[1] - lat[2])/2, digits = 5))
 lon_res <- abs(round((long[1] - long[2])/2, digits = 5))
+
 #decades <- seq_time
 seq_time <- seq(00, 12, by =1)
-lon <- -16.7
-lat <- 32.7375
+lon_view <- -16.7
+lat_view <- 32.7375
 
 #hgt to contour
-#Contour <- rasterToContour(raster(hgt, xmn = long[1], xmx = long[length(long)], ymn = lati[1], ymx = lati[length(lati)], CRS('+proj=longlat +datum=WGS84')),maxpixels=100000,nlevels=10)       #toGeoJSON(as.vector(hgt), )
+#Contour <- rasterToContour(raster(hgt, xmn = long[1], xmx = long[length(long)], ymn = lat[1], ymx = lat[length(lat)], CRS('+proj=longlat +datum=WGS84')),maxpixels=100000,nlevels=10)       #toGeoJSON(as.vector(hgt), )
 #Contour_Leaflet <- toGeoJSON(Contour)
 
 locs <- locs
@@ -50,7 +51,7 @@ ps <- raster_IGPH_merg
 # matrix to data.frame do IGPH, hgt
 # IGPH mad & ps
 IGPH_melt <- IGPH[,,1]
-dimnames(IGPH_melt) = list(lati, long)
+dimnames(IGPH_melt) = list(lat, long)
 IGPH_melt <- melt(IGPH_melt)
 colnames(IGPH_melt) <- c("lat", "lon", "val")
 # porto santo
@@ -60,7 +61,7 @@ IGPH_merg_melt <- melt(IGPH_merg_melt)
 colnames(IGPH_merg_melt) <- c("lat", "lon", "val")
 IGPH_melt <- rbind(IGPH_merg_melt, IGPH_melt)
 # HGT
-dimnames(hgt) = list(lati, long)
+dimnames(hgt) = list(lat, long)
 hgt_melt <- melt(hgt)
 colnames(hgt_melt) <- c("lat", "lon", "val")
 # porto santo
@@ -103,7 +104,7 @@ ui <- bootstrapPage( #theme = shinytheme("journal"),
                                                2- Os valores mensais são representados sem correção, uma vez que a correção foi aplicada à média anual.
                                                3- Os meses que compõem o Ano Meteorológico Tipico a simular com o ReSun tiveram por base 10 anos medidos na sua estimativa.
                                                4- EMAS (Estações Meteorológicas Automáticas).
-                                               5- Clique num ponto no mapa para ver mais detalhes sobre esse ponto.", 
+                                               5- Clique num ponto no mapa para ver mais detalhes sobre esse ponto.",
                                                style = "info", 
                                                actionButton("about", "Sobre", class="btn-block"))
                     ), 
@@ -124,12 +125,12 @@ ui <- bootstrapPage( #theme = shinytheme("journal"),
       #              style = "opacity: 0.9"
       #                    ),
       
-      bsModal("abouttext", "Sobre o Atlas Solar", "about", 
-              HTML(markdownToHTML(fragment.only=TRUE, text=c(
+      bsModal("abouttext", "Sobre o Atlas Solar", "about",    
+              wellPanel(     #HTML(markdownToHTML(fragment.only=TRUE, text=c(
                     "Este trabalho foi realizado no âmbito do estágio professional de Ricardo Jorge Agrela Faria (LREC), através do código de modelação solar ReSun (PereiraR., 2013).
                     
-                    Autor: Ricardo Jorge Agrela Faria"
-              )))
+                    Autor: Ricardo Jorge Agrela Faria", a("GitHub", href="https://github.com/ricardo88faria/ReSun_WRF_analysis")
+              )
               ),
       
       bsModal("Plot_and_table", "Gráfico e Tabela", "button_plot_and_table", size = "large",
@@ -159,9 +160,6 @@ server <- function(input, output, session) { # added ps for another raster, port
                   subset(ps, which(seq_time==input$date))
             }
       })
-      
-      # storage of mouse clicks circles locations lat long
-      #dat <- reactiveValues(circs = data.frame(longitude=numeric(), latitude=numeric()))
       
       # color pallete bins
       ras_vals <- reactive({ 
@@ -197,11 +195,11 @@ server <- function(input, output, session) { # added ps for another raster, port
       
       output$Map <- renderLeaflet({ 
             leaflet() %>% 
-                  setView(lng = lon, lat = lat, 10) %>% 
+                  setView(lng = lon_view, lat = lat_view, 10) %>% 
                   addTiles(options = providerTileOptions(noWrap = TRUE))  %>% 
                   #addWMSTiles("http://www.lrec.pt/", attribution = "Mapa Rad. Solar © 2015 - Ricardo Faria, LREC, MJInovação") %>%
-                  #addPolygons(ras_ploy(), lng = long, lat = lati, opacity=0.9, popup = popup_test) %>%
-                  #addPolylines(hgt_polylines(), lng = long, lat = lati, color = "red") %>% 
+                  #addPolygons(ras_ploy(), lng = long, lat = lat, opacity=0.9, popup = popup_test) %>%
+                  #addPolylines(hgt_polylines(), lng = long, lat = lat, color = "red") %>% 
                   #addProviderTiles("OpenTopoMap") %>% # modify thebackground map "Esri.WorldImagery" "OpenTopoMap"
                   addCircleMarkers(data=locs, radius=6, color="black", stroke=FALSE, fillOpacity=0.5, group="locations", layerId = ~loc)
       })
