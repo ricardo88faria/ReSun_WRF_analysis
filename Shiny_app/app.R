@@ -37,16 +37,15 @@ d <- rbind(d, subset(d_tot, Month=="TMY_corr"))
 
 rasterOptions(timer = T, progress = "text")
 x <- raster_IGPH
-#x <- disaggregate(raster_IGPH, fact=c(2, 2), method='bilinear')
+#x <- disaggregate(raster_IGPH, fact=c(2, 2), method='bilinear')   # bilinear interpolation to bigger resolution
 min_vals <- round(min(raster_IGPH@data@min), digits = -1)
 max_vals <- round(max(raster_IGPH@data@max), digits = -1)
 
 # porto santo
 ps <- raster_IGPH_merg
-#ps <- disaggregate(raster_IGPH_merg, fact=c(2, 2), method='bilinear')
+#ps <- disaggregate(raster_IGPH_merg, fact=c(2, 2), method='bilinear')   # bilinear interpolation to bigger resolution
 
 #maxIGPH <- round(max(as.numeric(max_IGPH)+5),-1)
-
 
 # matrix to data.frame do IGPH, hgt
 # IGPH mad & ps
@@ -91,7 +90,7 @@ ui <- bootstrapPage( #theme = shinytheme("journal"),
                     #    img(src="MJi_clean.png", height = 70, width = 100)
       ),
       
-      absolutePanel(top = 10, left = 50, draggable = TRUE,
+      absolutePanel(top = 10, left = 50, draggable = FALSE,
                     img(src="LREC.png", height = 70, width = 110),
                     img(src="ReSun.jpg", height = 70, width = 130),
                     style = "opacity: 0.9"
@@ -162,16 +161,16 @@ server <- function(input, output, session) { # added ps for another raster, port
       })
       
       # color pallete bins
-      ras_vals <- reactive({ 
+      minmax_vals <- reactive({ 
             if (input$units) {
                   c(seq(24*min_vals, 24*max_vals, 400)) 
             } else { 
                   c(seq(min_vals, max_vals, 15)) 
             }  
       }) #c(0, maxIGPH)
-      ras_vals_anual <- reactive({ 
+      minmax_vals_anual <- reactive({ 
             if (input$units) {
-                  c(seq(24*round(min(raster_IGPH$IGPH_tot[], na.rm = T), digits = -2), 24*round(max(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), 200)) 
+                  c(seq(24*round(min(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), 24*round(max(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), 240)) 
             } else { 
                   c(seq(round(min(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), round(max(raster_IGPH$IGPH_tot[], na.rm = T), digits = -1), 10)) 
             } 
@@ -188,10 +187,10 @@ server <- function(input, output, session) { # added ps for another raster, port
       #colorNumeric(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), na.color="transparent")
       #colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), bins = c(0, ras_vals(), Inf), na.color="transparent", alpha = F)
       #colorBin(c('#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15', '#67000d'), bins = c(0, 5, 8, 10, 12, 14, 18, 24, 26))
-      pal <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), bins = c(-Inf, ras_vals(), Inf), na.color="transparent", alpha = F) }) 
-      pal_legend <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), bins = ras_vals(), na.color="transparent", alpha = F) }) 
-      pal_anual <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals_anual(), bins = c(-Inf, ras_vals_anual(), Inf), na.color="transparent", alpha = F) }) 
-      pal_legend_anual <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals_anual(), bins = ras_vals_anual(), na.color="transparent", alpha = F) }) 
+      pal <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals(), bins = c(-Inf, minmax_vals(), Inf), na.color="transparent", alpha = F) }) 
+      pal_legend <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals(), bins = minmax_vals(), na.color="transparent", alpha = F) }) 
+      pal_anual <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_anual(), bins = c(-Inf, minmax_vals_anual(), Inf), na.color="transparent", alpha = F) }) 
+      pal_legend_anual <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_anual(), bins = minmax_vals_anual(), na.color="transparent", alpha = F) }) 
       
       output$Map <- renderLeaflet({ 
             leaflet() %>% 
@@ -208,11 +207,11 @@ server <- function(input, output, session) { # added ps for another raster, port
             proxy <- leafletProxy("Map")
             proxy %>% clearControls()
             if (input$legend) {
-                  proxy %>% addLegend(position="bottomleft", pal=pal_legend_anual(), values=ras_vals_anual(), title=legend_tytle()) %>% # values= seq(50, 220, 5)
+                  proxy %>% addLegend(position="bottomleft", pal=pal_legend_anual(), values=minmax_vals_anual(), title=legend_tytle()) %>% # values= seq(50, 220, 5)
                         addRasterImage(ras(), colors=pal_anual(), opacity=input$opac, layerId="raster") %>% 
                         addRasterImage(ras_ps(), colors=pal_anual(), opacity=input$opac, layerId="porto_santo")
             } else {
-                  proxy %>% addLegend(position="bottomleft", pal=pal_legend(), values=ras_vals(), title=legend_tytle()) %>% # values= seq(50, 220, 5)
+                  proxy %>% addLegend(position="bottomleft", pal=pal_legend(), values=minmax_vals(), title=legend_tytle()) %>% # values= seq(50, 220, 5)
                         addRasterImage(ras(), colors=pal(), opacity=input$opac, layerId="raster") %>% 
                         addRasterImage(ras_ps(), colors=pal(), opacity=input$opac, layerId="porto_santo")
             }

@@ -3,11 +3,11 @@ title: "Atlas da Radiação Solar da Ilha da Madeira"
 author: "Ricardo Faria"
 date: '`r format(Sys.Date())`'
 output:
-  html_document: default
   pdf_document:
     fig_caption: yes
     keep_tex: yes
     number_sections: yes
+  html_document: default
 documentclass: article
 ---
 
@@ -135,7 +135,7 @@ tmy_tab <- data.frame(#Mês = months_name[2:13],
                       Ano = as.numeric(tmy_values[2,2:13]),
                       Erro_abs = as.numeric(tmy_values[14,2:13])*100,
                       Rad_sol = as.numeric(tmy_values[26,2:13]))
-colnames(tmy_tab) <- c("Ano", " Erro abs. [%]", "Rad. Sol. [W/m2]")
+colnames(tmy_tab) <- c("Ano", " Erro abs. [%]", "Rad. Sol. [W/m^2]")
 row.names(tmy_tab) <- months_name[2:13]
 
 kable(tmy_tab, caption = 'Dados do TMY')
@@ -147,7 +147,8 @@ No anexo ??? pode ser consultada a evolução da frequência cumulativa diária 
 
 
 ```{r, echo=FALSE}
-shinyAppFile("../app.R", options=list(width="100%", height=400))
+# abrir shiny app
+#shinyAppFile("../Shiny_app/app.R", options=list(width="100%", height=400))
 ```
 
 
@@ -173,6 +174,8 @@ image(t(IGPH[,,1]), asp = .5)
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
+
+# Bibliografia
 
 ---
 references:
