@@ -136,8 +136,8 @@ if (corr == 1) {
             #corr_IGPH[[i]] <- ncvar_get(nc)[,,8]
             
             # dominio D02
-            #m_D02 <- corr_values[c("m_D02"), c(corr_vars[i])]
-            #x_D02 <- corr_values[c("x_D02"), c(corr_vars[i])]
+            m_D02 <- corr_values[c("m_D02"), c(corr_vars[i])]
+            x_D02 <- corr_values[c("x_D02"), c(corr_vars[i])]
             
             #corr_fix[[paste0(fix_var[i], "_D02")]] <- x_D02 + m_D02*get(fix_var_tmp[i])
 
@@ -673,7 +673,7 @@ if (stat_coords == 0) {
       }
       
       #save objects for shiny app & static paper
-      save(long, lat, hgt, locs, d, d_tot, IGPH, Kt, raster_IGPH, raster_Kt, raster_IDIF, raster_IDIR, raster_DIFGPH, rgb.palette.rad, max_IGPH, months_name, file = "output/data.RData")
+      save(m_D02, x_D02, long, lat, hgt, locs, d, d_tot, IGPH, Kt, raster_IGPH, raster_Kt, raster_IDIF, raster_IDIR, raster_DIFGPH, rgb.palette.rad, max_IGPH, months_name, file = "output/data.RData")
 }
 #save objects for shiny app
 save(locs, d, d_tot, file = "output/data_coords.RData")
