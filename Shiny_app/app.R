@@ -283,11 +283,6 @@ server <- function(input, output, session) { # added ps for another raster, port
             
             # global rad 
             rad_val <- subset(IGPH_melt, lat<(clat+lat_res) & lat>(clat-lat_res) & lon<(clng+lon_res) & lon>(clng-lon_res))
-            if (input$units) {
-                  rad_val <- 24*rad_val
-            } else { 
-                  rad_val <- rad_val
-            } 
             rad_val <- round(rad_val, digits = 3)
             hgt_val <- subset(hgt_melt, lat<(clat+lat_res) & lat>(clat-lat_res) & lon<(clng+lon_res) & lon>(clng-lon_res)) # 0.00045 = resolução da matriz = long[2] - long[1]
             hgt_val <- round(hgt_val, digits = 3)
@@ -313,10 +308,14 @@ server <- function(input, output, session) { # added ps for another raster, port
             month_rad <- round(month_rad, digits = 3)
             
             if (input$units) {
+                  rad_val <- 24*rad_val
+                  month_rad <- 24*month_rad
                   rad_units <- paste(" [Wh/m^2.dia]")
+                  
             } else { 
                   rad_units <- paste(" [W/m2]")
             }
+
             # html colors #7f0000, #0375DB
             popup_click <- paste0("<span style='color: #0375DB'><strong>Valor da Radiação anual com a correção TMY no ponto selecionado.</strong></span>", 
                                   "<br><span style='color: salmon;'><strong>Radiação Global anual: </strong></span>",
