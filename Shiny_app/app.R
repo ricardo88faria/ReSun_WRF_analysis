@@ -85,7 +85,7 @@ ui <- bootstrapPage( #theme = shinytheme("journal"),
       absolutePanel(top=10, right=10, draggable = F,
                     sliderInput("date", "Mês", min=min(seq_time), max=max(seq_time), value=seq_time[1], step=1, sep="", #format="## Months", timeFormat = "%B",
                                 animate = animationOptions(interval = 2500, loop = F)), # , post=" Mês"  , playButton = "PLAY", pauseButton = "PAUSA"
-                    checkboxInput("legend", "Legenda adaptada para valores anuais (desabilitar para maior gama valores)", TRUE),
+                    #checkboxInput("legend", "Legenda adaptada para valores anuais (desabilitar para maior gama valores)", TRUE),
                     checkboxInput("units", "Mudar unidades para [Wh/m^2.dia]", FALSE), 
                     checkboxInput("addMarker", "Adicionar marcador ao clicar no mapa."),
                     #textInput("userlat", "Latitude do ponto em graus decimais:", "32.648904"),
@@ -227,10 +227,22 @@ server <- function(input, output, session) { # added ps for another raster, port
       #colorNumeric(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), na.color="transparent")
       #colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = ras_vals(), bins = c(0, ras_vals(), Inf), na.color="transparent", alpha = F)
       #colorBin(c('#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15', '#67000d'), bins = c(0, 5, 8, 10, 12, 14, 18, 24, 26))
-      pal <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals(), bins = c(-Inf, minmax_vals(), Inf), na.color="transparent", alpha = F) }) 
-      pal_legend <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_leg(), bins = minmax_vals_leg(), na.color="transparent", alpha = F) }) 
-      pal_anual <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_anual(), bins = c(-Inf, minmax_vals_anual(), Inf), na.color="transparent", alpha = F) }) 
-      pal_legend_anual <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_anual_leg(), bins = minmax_vals_anual_leg(), na.color="transparent", alpha = F) }) 
+      pal <- reactive({ 
+            if (input$date != 0) {
+                  colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals(), bins = c(-Inf, minmax_vals(), Inf), na.color="transparent", alpha = F) 
+            } else if (input$date == 0) {
+                  colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_anual(), bins = c(-Inf, minmax_vals_anual(), Inf), na.color="transparent", alpha = F) 
+            }
+      })      
+      pal_legend <- reactive({ 
+            if (input$date != 0) {
+                  colorNumeric(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_leg(), na.color="transparent", alpha = F) 
+            } else if (input$date == 0) {
+                  colorNumeric(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_anual_leg(), na.color="transparent", alpha = F)
+            }
+      }) 
+      #pal_anual <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_anual(), bins = c(-Inf, minmax_vals_anual(), Inf), na.color="transparent", alpha = F) }) 
+      #pal_legend_anual <- reactive({ colorBin(palette = c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), domain = minmax_vals_anual_leg(), bins = minmax_vals_anual_leg(), na.color="transparent", alpha = F) }) 
       
       output$Map <- renderLeaflet({ 
             leaflet() %>% 
@@ -246,12 +258,12 @@ server <- function(input, output, session) { # added ps for another raster, port
       observe({
             proxy <- leafletProxy("Map")
             proxy %>% clearControls()
-            if (input$legend) {
-                  proxy %>% addLegend(position="bottomleft", pal=pal_legend_anual(), values=minmax_vals_anual_leg(), title=legend_tytle()) %>% # values= seq(50, 220, 5)
-                        addRasterImage(ras(), colors=pal_anual(), opacity=input$opac, project = F, layerId="raster") %>% 
-                        addRasterImage(ras_ps(), colors=pal_anual(), opacity=input$opac, project = F, layerId="porto_santo")
+            if (input$date == 0) {
+                  proxy %>% addLegend(position="bottomleft", pal=pal_legend(), values=minmax_vals_anual_leg(), title=legend_tytle(), opacity = input$opac, labFormat = labelFormat(big.mark = "")) %>% # values= seq(50, 220, 5)
+                        addRasterImage(ras(), colors=pal(), opacity=input$opac, project = F, layerId="raster") %>% 
+                        addRasterImage(ras_ps(), colors=pal(), opacity=input$opac, project = F, layerId="porto_santo")
             } else {
-                  proxy %>% addLegend(position="bottomleft", pal=pal_legend(), values=minmax_vals_leg(), title=legend_tytle()) %>% # values= seq(50, 220, 5)
+                  proxy %>% addLegend(position="bottomleft", pal=pal_legend(), values=minmax_vals_leg(), title=legend_tytle(), opacity = input$opac, labFormat = labelFormat(big.mark = "")) %>% # values= seq(50, 220, 5)
                         addRasterImage(ras(), colors=pal(), opacity=input$opac, project = F,  layerId="raster") %>% 
                         addRasterImage(ras_ps(), colors=pal(), opacity=input$opac, project = F, layerId="porto_santo")
             }
@@ -277,8 +289,8 @@ server <- function(input, output, session) { # added ps for another raster, port
             #      clat <- round(lat_input(), digits = 4)
             #      clng <- round(lon_input(), digits = 4)
             #} else {
-                  clat <- round(click$lat, digits = 4)
-                  clng <- round(click$lng, digits = 4)
+            clat <- round(click$lat, digits = 4)
+            clng <- round(click$lng, digits = 4)
             #}
             
             # global rad 
@@ -310,19 +322,30 @@ server <- function(input, output, session) { # added ps for another raster, port
             if (input$units) {
                   rad_val <- 24*rad_val
                   month_rad <- 24*month_rad
-                  rad_units <- paste(" [Wh/m^2.dia]")
+                  rad_units <- paste(" [Wh/m^2.dia]   ")
                   
             } else { 
-                  rad_units <- paste(" [W/m2]")
+                  rad_units <- paste(" [W/m2]   ")
             }
-
+            
             # html colors #7f0000, #0375DB
             popup_click <- paste0("<span style='color: #0375DB'><strong>Valor da Radiação anual com a correção TMY no ponto selecionado.</strong></span>", 
                                   "<br><span style='color: salmon;'><strong>Radiação Global anual: </strong></span>",
                                   rad_val, rad_units,
                                   
                                   "<br><span style='color: salmon;'><strong>Radiação Mensal s/ correção TMY: </strong></span>",
-                                  list(month_rad), rad_units,# paste0(" (",month_input(), ")"),
+                                  "<br><span style='color: gray;'> Janeiro: </strong></span>", month_rad[1], rad_units,
+                                  "<br><span style='color: gray;'> Fevereiro: </strong></span>", month_rad[2], rad_units,
+                                  "<br><span style='color: gray;'> Março: </strong></span>", month_rad[3], rad_units,
+                                  "<br><span style='color: gray;'> Abril: </strong></span>", month_rad[4], rad_units,
+                                  "<br><span style='color: gray;'> Maio: </strong></span>", month_rad[5], rad_units,
+                                  "<br><span style='color: gray;'> Junho: </strong></span>", month_rad[6], rad_units,
+                                  "<br><span style='color: gray;'> Julho: </strong></span>", month_rad[7], rad_units,
+                                  "<br><span style='color: gray;'> Agosto: </strong></span>", month_rad[8], rad_units,
+                                  "<br><span style='color: gray;'> Setembro: </strong></span>", month_rad[9], rad_units,
+                                  "<br><span style='color: gray;'> Outubro: </strong></span>", month_rad[10], rad_units,
+                                  "<br><span style='color: gray;'> Novembro: </strong></span>", month_rad[11], rad_units,
+                                  "<br><span style='color: gray;'> Dezembro: </strong></span>", month_rad[12], rad_units,
                                   
                                   "<br><span style='color: salmon;'><strong>Altura do nível do mar: </strong></span>",
                                   hgt_val, " [m]",
