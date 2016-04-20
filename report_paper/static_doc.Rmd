@@ -8,26 +8,46 @@ output:
     keep_tex: yes
     number_sections: yes
   html_document: default
+graphics: yes
 documentclass: article
 ---
 
+
 ```{r setup, include=FALSE}
+
 # adicionar \usepackage[portuguese]{babel} ao ficheiro latex (.tex)
 library(shiny)
 library(knitr)
 library(kfigr)
 library(captioner)
+library(ggplot2)
+library(reshape2)
+
+library(viridisLite)
+library(h5)
+library(fields)
+library(maptools)
+library(sp)
+
+library(ggmap)
+library(RColorBrewer)
+
 
 #library(knitcitations); cleanbib()
 #cite_options(citation_format = "pandoc", check.entries=FALSE)
-knitr::opts_chunk$set(echo = TRUE, dev = 'pdf', dpi=200, fig.align='center', fig.lp='fig:')
+knitr::opts_chunk$set(echo = TRUE, dpi = 100, fig.align = 'center', fig.lp = 'fig:') # dev = 'pdf',
 #knitr::opts_chunk$set(, dev = 'pdf')
 load("../output/data.RData")
 load("../output/data_coords.RData")
 load("../output/data_merge.RData")
 
+source("../matrix_rotation.R")
+
 options(knitr.table.format = 'pandoc')
 
+proj <- CRS("+proj=longlat +datum=WGS84 +towgs84=-160.410,-21.066,-99.282,2.437,-17.250,-7.446,0.168 +wktext +no_defs ") #CRS('+proj=longlat +datum=WGS84')
+land <- readShapeSpatial("../input/map/PRT_adm2.shp", proj4string = proj)
+land_cities <- readShapePoly("../input/map/PRT_adm2.shp", proj4string = proj)
 ```
 
 
@@ -38,12 +58,14 @@ A realização do estudo do Atlas da Radiação Solar da Ilha da Madeira, teve i
 
 # Localização e Decrição
 ***
-A região em estudo é a ilha da Madeira, que é a principal ilha do arquipélago da Madeira, situado no oceano Atlântico, a sudoeste da costa portuguesa. Encontra-se entre as longitudes -17.3º a -16.64º e latitudes 32.6º a 32.9º. O ponto culminante situa-se no Pico Ruivo, 1.862 m de altura, a ilha é composta por um perímetro	179.3  km e área de 742.41  km^2^.
-O [LREC](<http://www.lrec.pt>) dispõe de uma vasta rede de Estações Meteorológicas Automáticas (EMA) distribuidas por toda a ilha, representada na \ref{fig:ggmap} `r figr("ggmap", TRUE, type="Fig.")` e  `r figr("est_tab", TRUE, type="Tab.")`. Reference [@fenner2012a]
+A região em estudo é a ilha da Madeira, que é a principal ilha do arquipélago da Madeira, situado no oceano Atlântico, a sudoeste da costa portuguesa. Encontra-se entre as longitudes -17.3º a -16.64º e latitudes 32.6º a 32.9º. O ponto culminante situa-se no Pico Ruivo, 1.862 m de altura, a ilha é composta por um perímetro	179.3 km e área de 742.41  km^2^.
+O [LREC](<http://www.lrec.pt>) dispõe de uma vasta rede de Estações Meteorológicas Automáticas (EMA) distribuidas por toda a ilha, representada na `r figr("ggmap", TRUE, type="Fig.")` e  `r figr("est_tab", TRUE, type="Tab.")`.
+
+```{r, echo=FALSE} 
+#\ref{fig:ggmap}
+```
 
 ```{r ggmap, echo=FALSE,  message=FALSE, anchor = "Figura", fig.cap = "Localização da posição das EMAS que pertencem ao LREC"}
-library(ggmap)
-library(RColorBrewer)
 
 data <- fortify(locs)
 lon_coords <- long[length(long)/2]
@@ -68,25 +90,31 @@ ggmap(mapImage) +
 
 
 ```{r est_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
-kable(data, caption = 'Localização das EMAS')
+
+kable(data, caption = 'Localização das EMAS', align = "c")
+
 ```
 
 
 ## Clima 
+
 Devido à sua latitude, a ilha da Madeira apresenta todas as características de ilha subtropical, caracteristicamente a costa Norte apresenta um clima temperado, enquanto a Sul denota-se mais subtropical. Em certos pontos da costa sul, as temperaturas médias anuais atingem valores acima dos 20 graus celsius. A temperatura da água do mar, varia entre os 26 de verão e os 17 de inverno. Os ventos predominantes são de oeste a noroeste no inverno, e de nordeste no verão (alíseos). A precipitação anual varia de 500 mm no sudeste da ilha aos mais de 2000 mm nas encostas norte.
 
+
 ## Topografia
+
 A ilha da Madeira apresenta uma topografia muito montanhosa, com profundos vales incrustados entre os picos e suas caraterísticas falésias.
 
-```{r topography, echo=FALSE, message=FALSE, fig.cap="topografia.", anchor = "Figura"}
+```{r topography, echo=FALSE, message=FALSE, fig.cap="Topografia com linhas de cota em [m].", anchor = "Figura"}
 
-contour(long, lat, t(hgt), asp =1.1, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)))
-grid()
+contour(long, lat, t(hgt), asp =1.1, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)), xlab = 'Longitude [°]', ylab = 'Latitude [°]')
+grid(NULL,NULL,lty = 5, lwd = 0.5)
 
 ```
 
-# Recurso da Energia Solar
 
+# Recurso da Energia Solar
+***
 A radiação solar incidente na superfície terrestre resulta de uma complexa interacção entre atmosfera e a superfície. Numa escala mais global, fazem-se notar os gradientes da latitude causados pela geometria da terra e pelo seu movimento relativo ao sol (translação e rotação). Numa escala regional e até local, a morfologia do terreno é o maior factor de modificação da distribuição da radiação solar, variando em resposta à elevação, inclinação da superfície, orientação e sombreamento. A atenuação atmosférica, efeitos de dispersão e absorção pelos gases, partículas sólidas e líquidas, bem como a nebulosidade, agem como factores depreciativos dos valores de radiação.
 A radiação que chega à superfície terrestre é selectivamente atenuada pela atmosfera, sendo a radiação directa a componente que não é reflectida nem dispersa. A radiação que é dispersa origina a radiação difusa e, por fim, uma pequena parte é reflectida (apenas em superfícies inclinadas) causando a radiação reflectida. Estas três componentes da radiação juntas, dão origem à radiação global ou onda curta.
 Dada a atenuação da radiação, a quantidade de energia que actualmente chega à Terra, habitualmente, não excede os 70 % daquela que se encontra fora da nossa atmosfera, designada de extraterrestrial. Comummente as regiões de baixa latitude e especialmente com climas secos, expressam, tipicamente, os índices de radiação médios mais altos.
@@ -95,12 +123,25 @@ O recurso solar num dado local é caracterizado pela radiação ou irradiação 
 
 
 # Metodologia
-
+***
 Metodologia a usar na elaboração do novo Atlas Solar do Arquipélago da Madeira:
 A estimativa do recurso solar será executada pelo código de simulação ReSun^TM^ (Pereira et al 2013) na sua variante de modelação, que se encontra capacitada para modelar os principais factores que afectam a magnitude do recurso solar, permitindo assim apurar a verdadeira valia da distribuição do recurso solar de uma forma mais detalhada. A modelação ReSun^TM^ faz uso de resultados das simulações meteorológicas WRF (Weather Research & Forecasting Model), num procedimento designado de downscaling, que engloba simulações idealizadas (céu limpo) nos pontos de uma malha de cálculo (mapeamento) ou pontos discretos de interesse (séries dados). São usadas técnicas de decomposição da radiação e métodos de interpolação por recurso a distância efetivas.
 As simulações a usar na obtenção do Atlas Solar serão realizadas para um período temporal equivalente a um ano meteorológico típico, selecionado a partir das Estações Meteorológicas Automáticas distribuídas pelo arquipélago da Madeira e com auxilio, se necessário, de dados provenientes de uma análise retrospetiva do programa MERRA (Modern-Era Retrospective Analysis For Research And Applications). Os dados das estações serão processados e analisados com o módulo QC (Solar Data Quality Check) do ReSun^TM^, onde se fará uma análise de consistência das medições de radiação global das estações. Será também realizada uma averiguação da performance do ReSun^TM^ para um ano a selecionar a partir das medições locais.
 
-### Descrição do modelo ReSun
+
+## Simulações Mesoescala
+
+O uso de resultados de mesoescala para alimentar o modelo ReSunTM tem como objetivo integrar os efeitos de atenuação da radiação solar provocada pela formação de nebulosidade.
+O modelo de mesoescala utilizado foi o WRF (Weather Research and Forecasting System, UCAR) versão 3.3.5.
+Este modelo de mesoescala é atualmente utilizado por inúmeras instituições por todo o mundo, e a sua versatilidade garante uma personalização completa para uma vasta gama de estudos. Este sistema de modelação numérica consiste em vários módulos especialmente criados para assimilar dados de observações e simular condições atmosféricas, resolvendo várias equações que descrevem a dinâmica e termodinâmica dos processos climáticos em áreas limitadas [@skamarock2005];[@lo2007].
+Os dados climáticos de entrada utilizados para alimentar as condições de fronteira do modelo WRF foram os NCEP FNL (Final) Operation Global Analysis [@gfs2003]. Este projeto, concebido pelo Global Data Assimilation System (GDAS), reúne dados de observações globais do programa Global Telecommunications System (GTS), e de outras fontes observacionais como, tradicionais mastros meteorológicos, boias, satélites entre outros. Os dados FNL são concebidos com o mesmo modelo com o qual o National Center for Environment Prediction (NCEP) opera, o Global Forecast System (GFS). Estes dados descrevem a atmosfera em vários níveis verticais, com uma resolução horizontal de 1o (~110km), sendo utilizados em estudos de larga escala e para inicialização de simulações de menor escala.
+Os dados das fronteiras físicas são oriundos do SRTM30 DEM (United States Geological Survey), na versão 2.0. Esta base de dados consiste num modelo de elevação digital (DEM – Digital Elevation Model) que fornece informação sobre a elevação do terreno num domínio horizontal de 30 arco segundos (aproximadamente 1 km), obtida através de interferometria por radar, com cobertura de 80% da massa terrestre [@farr2000].
+Os dados sobre a cobertura do solo são oriundos do Global Land Cover Characteristics Database (USGS, National Center for Earth Resources Observation and Science – EROS, Joint Research Centre of the European Commission). Tais dados consistem numa série de informações globais sobre as características de cobertura do solo com resolução horizontal de 1 km, concebidos para utilização numa ampla gama de aplicações de investigação ambiental e modelação, adquiridos de observações globais realizadas entre Abril de 1992 e Março de 1993 do Advanced High Resolution Radiometer, a bordo dos satélites da série NOAA [@sellers1996];[@skamarock2005];[@gemmill2007].
+Dados de Temperatura da Superfície do Mar (SST – Sea Surface Temperature) são extraídos do Daily Real-Time, Global Sea Surface Temperature Analysis (RTG-SST), disponibilizado pelo National Centers for Environment Prediction (NCEP), National Weather Service (NWS/NOAA). Esta base de dados consiste numa combinação diária de dados in-situ e medições do Advanced Very High Resolution Radiometer (AVHRR) SST analysis, numa grelha de 0.5 graus de resolução [10].
+As configurações e parametrizações do modelo de mesoescala seguem conclusões retiradas aquando do desenvolvimento do acoplamento WRF/ReSunTM [@pereira2013].
+
+
+## Descrição do modelo ReSun
 
 O modelo ReSun^TM^, _Solar Modelling on Coupling Techinques with Mesoscale Simulations_, Pereira et al 2013, tem sido desenvolvido e testado desde 2009 na MEGAJOULE INOVAÇÃO e conta também com a colaboração do departamento de Física da Universidade de Aveiro. O ReSun^TM^ usa resultados das simulações do modelo WRF, para correção das simulações idealizadas (céu limpo) nos pontos da malha ReSun^TM^. São usadas técnicas de decomposição da radiação e métodos de interpolação, por recurso a distância efetivas, para o transporte das quantidade de correção para os pontos da malha de cálculo do Re.SunTM.
 Os factores de correção da simulação de céu limpo da malha do ReSun^TM^ podem ser estimados através de duas formas, em termos de índice solar global (Radiação Global WRF/Radiação Global Céu Limpo) ou índice solar directo (Radiação Direta WRF / Radiação Direta Céu Limpo) e difuso (Radiação Global WRF / Radiação Difusa Céu Limpo).
@@ -110,14 +151,16 @@ O modelo ReSun^TM^ apresenta a capacidade de integrar informação atual do esta
 Dependendo do modelo do céu limpo utilizado existem diferentes informações para caracterizar a pureza atmosfera. No caso do modelo de ESRA as equações fazem uso da informação de TL2. A versão simplificada do modelo de Solis (Ineichen, 2008), utiliza como entrada a informação da profundidade óptica dos aerossóis (Aerosol Optical Depth, AOD) para um comprimento de onda de 700 nm (AOD700).
 Para efeitos de simulação o ReSun^TM^ assume valores de cadência diária de AOD ou TL2. Assim sendo temos que os valores mensais de SODA são interpolados linearmente de mensal para diário e os valores médios diários da MACC resultam de uma frequência de amostragem de 3 horas.
 
+
 ### Ano Meteorológico Típico
 
 Em termos gerais, a previsão da performance a longo prazo de qualquer sistema energético solar depende da existência de uma extensa e fiável base climática local. Teoricamente, esta análise energética deve ser realizada usando-se vários anos de dados climáticos, o que na maior parte das vezes não é possível dada a sua inexistência. Isto leva-nos a ter de recorrer a informação proveniente de bases climáticas de larga escala obtidas através de modelos de simulação avançados. Contudo, o uso de períodos extensões para simulação são computacionalmente exigentes, tornando as análises demasiado morosas e dispendiosas. A variabilidade inter anual das condições climáticas motiva a necessidade de se derivar uma base que represente as condições médias de longo prazo num único ano. Comummente isto é conseguido através de um ano meteorológico típico (Typical Meterological Year, TMY) constituído pela informação dos 12 meses mais representativos.
-O método estatístico utilizado para estimativa do TMY foi o de Filkenstein – Shafer (FS) devidamente implementado pela [Megajoule Inovação](<http://megajoule.pt>). O método baseia a seleção dos meses através de uma análise da frequência cumulativa da média diária dos valores de Radiação Global e Temperatura para cada um dos meses de um ano civil, Janeiro a Dezembro. De uma forma resumida, a escolha do ano para cada um dos meses resultará do que apresentar o menor somatório de erros diários de frequências cumulativas de um mês em especifico, de um dado ano, face ao longo termo do mês. De salientar que os erros obtidos para cada uma das variáveis incluídas na análise do TMY são sujeitas a uma ponderação utilizando-se pesos diferentes, 70% e 30%, radiação solar global e temperatura, respetivamente.
+O método estatístico utilizado para estimativa do TMY foi o de Filkenstein – Shafer (FS) devidamente implementado pela [Megajoule Inovação](<http://megajoule.pt>) [@finkelstein1971]. O método baseia a seleção dos meses através de uma análise da frequência cumulativa da média diária dos valores de Radiação Global e Temperatura para cada um dos meses de um ano civil, Janeiro a Dezembro. De uma forma resumida, a escolha do ano para cada um dos meses resultará do que apresentar o menor somatório de erros diários de frequências cumulativas de um mês em especifico, de um dado ano, face ao longo termo do mês. De salientar que os erros obtidos para cada uma das variáveis incluídas na análise do TMY são sujeitas a uma ponderação utilizando-se pesos diferentes, 70% e 30%, radiação solar global e temperatura, respetivamente.
 Para obtenção de um TMY que caracterize de uma forma fiável a distribuição da radiação global de longo prazo e que reflita a variabilidade climática na área de interesse, recorreu-se a dados horários de radiação solar global e temperatura provenientes da Reanálise MERRA da NASA. Foram extraídos 30 pontos nativos da malha MERRA, distribuídos ao longo da área de interesse, para os últimos 10 anos (2005 – 2015) para apoio à seleção de 12 meses típicos que compõem o TMY. Na `r figr("ggmap", TRUE, type="Fig.")` pode ser consultada a distribuição geográfica dos pontos.
 Após extração da informação para os 30 pontos, foi realizada uma integração da informação de cada ponto para um único ficheiro de forma a permitir a análise estatística para a área de interesse. A `r figr("tmy_tab", TRUE, type="Tab.")` apresenta a informação relativa anos obtidos para cada um dos meses do TMY e o valor médio do erro absoluto ponderado (Radiação e Temperatura) face ao longo termo.
 
 ```{r cob_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
+
 file_csv <- Sys.glob("ReSun/*.csv")
 tmy_values <- read.csv(file_csv, sep = ";")
 
@@ -125,12 +168,14 @@ tx_cob <- data.frame(tax_cob_tmy = tmy_values[47:54,2:13])
 colnames(tx_cob) <- c(months_name[2:13])
 row.names(tx_cob) <- tmy_values[47:54,1]
 
-kable(tx_cob, caption = 'Taxa de cobertura de Dados das EMAS entre 2005 e 2015')
+kable(tx_cob, caption = 'Taxa de cobertura de Dados das EMAS entre 2005 e 2015', align = "c")
+
 ```
 
-Após realizar a análise das EMAS com o Quality Check do ReSun^TM^, verifica-se que as estações de Machico (MACH) e Santana (STNA) apresentam uma taxa de cobertura de dados muito baixa ao longo do ano de 2005 a 2015, estas foram retiradas para o cálculo final do TMY, de modo a obter maior fiabilidade nos valores finais deste.
+Após realizar a análise das EMAS com o Quality Check do ReSun^TM^, verifica-se que as estações de Machico (MACH) e Santana (STNA) apresentam uma taxa de cobertura de dados muito baixa ao longo do ano de 2005 a 2015. Estas foram retiradas para o cálculo final do TMY, de modo a obter maior fiabilidade nos valores finais deste.
 
 ```{r tmy_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
+
 tmy_tab <- data.frame(#Mês = months_name[2:13], 
                       Ano = as.numeric(tmy_values[2,2:13]),
                       Erro_abs = as.numeric(tmy_values[14,2:13])*100,
@@ -138,22 +183,205 @@ tmy_tab <- data.frame(#Mês = months_name[2:13],
 colnames(tmy_tab) <- c("Ano", " Erro abs. [%]", "Rad. Sol. [W/m^2]")
 row.names(tmy_tab) <- months_name[2:13]
 
-kable(tmy_tab, caption = 'Dados do TMY')
+kable(tmy_tab, caption = 'Dados do TMY', align = "c")
+
 ```
 
-No anexo ??? pode ser consultada a evolução da frequência cumulativa diária da radiação global e temperatura para cada um dos meses do TMY.
+Nas seguintes Figuras pode ser consultada a evolução da frequência cumulativa diária da radiação global e Temperatura para cada um dos meses do TMY.
+
+#### Para os valores de Radiação medidos:
+![Título.](ReSun/tmy/Irradiance_CDF Monthly_Ja_Ap.png)
+![jfffjf.](ReSun/tmy/Irradiance_CDF Monthly_My_Ag.png)
+![Cklj.](ReSun/tmy/Irradiance_CDF Monthly_Sp_Dc.png)
+
+#### Para os valores de Tempreatura medidos:
+![cjllclnb.](ReSun/tmy/Temperature_CDF Monthly_Ja_Ap.png)
+![,mn,b,e.](ReSun/tmy/Temperature_CDF Monthly_My_Ag.png)
+![vhkvhuuu.](ReSun/tmy/Temperature_CDF Monthly_Sp_Dc.png)
 
 
+### Profundidade Ótica dos Aerossóis
+
+A profundidade ótica dos aerossóis, mais conhecida por Aerosol Optical Depth, AOD, é conhecida por ser uma variável crítica de entrada em modelos de radiação solar, e determina parcialmente o grau de precisão das estimativas de radiação solar [@gueymard2012]. Em termos globais, a nebulosidade é a principal responsável pela depreciação da magnitude da radiação solar. Todavia, em condições de céu limpo, AOD, torna-se no principal controlador. Nas áreas onde as condições de céu limpo acontecem com maior frequência, torna-se imperativa a sua consideração no espaço e tempo. Além do efeito na estimativa da radiação solar, os aerossóis desempenham um papel determinante na formação de nebulosidade e de modificação das propriedades microfísicas das nuvens. A sua densidade, composição química e tamanho influência o albedo (percentagem de reflecção) e tempo de vida das nuvens, bem como, a taxa e quantidade de precipitação (Abel et al., 2005; Lohmann and Feichter, 2005). Os aerossóis estão intrinsecamente associadas a poeiras transportadas pelas correntes globais de vento, partículas de carbono e sulfatos produzidas por incêndios, tipos de solo, atividades industriais e até mesmo partículas de sais marinhos resultantes da agitação marítima.
+Neste estudo a radiação solar considera informação da Turbidez atmosférica para uma massa de ar igual a 2, TL2, proveniente do programa SODA (Solar Radiation Data), atualizada para cada um dos meses do TMY e posteriormente interpolada para uma frequência diária.
+O projeto SODA contém informação dos valores mensais da TL2, provenientes de uma sobreposição de várias fontes e através de estimativas diretas e indiretas da Turbidez atmosférica para uma massa de ar igual a 2, METEOTEST (Redmund et al ., 2003).
+Face à utilização do modelo Simplified Solis, que faz uso de valores AOD para descrever a pureza da atmosfera, existe a necessidade da conversão de valores de TL2 em valores de AOD para um comprimento de onde de 700nm. A formulação proposta por Ineichen, Pierre, 2008 foi usada para o propósito de conversão.
+
+```{r aod_ps, echo=FALSE, message=FALSE, fig.cap="Cálculo dos horizontes, direção de Norte no Porto Santo.", anchor = "Figura"}
+
+
+
+```
+
+
+### Dados topográficos e horizontes
+
+Para definição digital da topografia, foram utilizados dados dos modelos digitais de elevação provenientes do projeto SRTM. A resolução final da grelha de altimetria a utilizar nos cálculos foi de 500 m. O MJ Inovação possui uma vasta experiência na avaliação e uso desta uma informação, sendo usada de uma forma recorrente em diversos projetos espalhados pelo mundo.
+
+```{r srtm_topo_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 500m de resolução da Ilha da Madeira.", anchor = "Figura"}
+
+hgt[hgt == 0] <- NA
+
+filled.contour(long, lat, t(hgt),  col = terrain.colors(20), asp = 1, # nlevels = 400, #axes = F #(12), nlev=13,
+               plot.title = title(xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
+               plot.axes = {
+                 axis(1); 
+                 axis(2); 
+                 grid(NULL,NULL,lty = 5, lwd = 0.5);
+                                  plot(land, add = T); text(getSpPPolygonsLabptSlots(land), labels=as.character(land$NAME_2), cex=.5)
+
+                 },
+               key.title = title(main = as.expression(paste("[m]"))))
+
+```
+
+```{r srtm_topo_ps, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 500m de resolução da Ilha do Porto Santo.", anchor = "Figura"}
+
+hgt_ps[hgt_ps == 0] <- NA
+
+filled.contour(long_ps, lat_ps, t(hgt_ps),  col = terrain.colors(31), asp = 1, # nlevels = 400, #axes = F #(12), nlev=13,
+               plot.title = title(xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
+               plot.axes = {
+                 axis(1); 
+                 axis(2); 
+                 grid(NULL,NULL,lty = 5, lwd = 0.5);
+                                  plot(land, add = T); text(getSpPPolygonsLabptSlots(land), labels=as.character(land$NAME_2), cex=.5)
+                 },
+               key.title = title(main = as.expression(paste("[m]"))))
+
+```
+
+
+A descrição direcional das elevações em graus, horizontes, foi realizada segundo o método proposto por Dozier et al.1980 e teve por base a informação de altimétrica na resolução de 500m. Na estimativa dos horizontes foram utilizados 96 sectores direcionais permitindo estimar os efeitos de sombreamento e consequente influência sobre o défice de energia.
+Na `r figr("hori_ps_N", TRUE, type="Fig.")` e `r figr("hori_ps_E", TRUE, type="Fig.")` pode ser consultado com maior detalhe a informação topográfica de entrada, e o mapa de horizontes para a direção de 0º (Norte) e 90º (Este).
+
+```{r hori_ps_N, echo=FALSE, message=FALSE, fig.cap="Cálculo dos horizontes, direção de Norte no Porto Santo.", anchor = "Figura"}
+
+hor_file_ps <- h5file("ReSun/horiz/PTS_100x100/hor_mapcal_96.mat")
+hor_mat_ps <- hor_file_ps["matrixtotalf"][]
+
+#library(plotly)
+#plot_ly(z = t(hor_mat_ps[4,,]), type = "contour", width = "100%", height = "100%")
+#plot_ly(z = t(hor_mat_ps[48,,]), type = "contour", width = "100%", height = "100%")
+
+#hor_mat[hor_mat == 0] <- NA
+#image.plot(hor_mat_ps[4,,], col = viridis(n = 21, alpha = 1, begin = 0, end = 1, option = "D"), axes=T, legend.lab="[m/s]") #,  xlab='Longitude [°]', ylab='Latitude [°]'
+
+filled.contour(hor_mat_ps[4,,], col = viridis(n = 20, alpha = 1, begin = 0, end = 1, option = "A"), # nlevels = 400, #axes = F #(12), nlev=13,
+               plot.axes = {
+                 axis(1); 
+                 axis(2); 
+                 grid(NULL,NULL,lty = 5, lwd = 0.5)
+                 },
+               key.title = title(main = as.expression(paste("[º]"))),
+               plot.title = title(main = "Horizontes"))
+
+```
+
+```{r hori_ps_E, echo=FALSE, message=FALSE, fig.cap="Cálculo dos horizontes, direção de Este no Porto Santo.", anchor = "Figura"}
+
+
+#image.plot(hor_mat_ps[27,,], col = viridis(n = 31, alpha = 1, begin = 0, end = 1, option = "D"), axes=T, legend.lab="[m/s]") #,  xlab='Longitude [°]', ylab='Latitude [°]'
+
+filled.contour(hor_mat_ps[27,,], col = viridis(n = 20, alpha = 1, begin = 0, end = 1, option = "A"), # nlevels = 400, #axes = F #(12), nlev=13,
+               plot.axes = {
+                 axis(1); 
+                 axis(2); 
+                 grid(NULL,NULL,lty = 5, lwd = 0.5);
+                 },
+               key.title = title(main = as.expression(paste("[º]"))),
+               plot.title = title(main = "Horizontes"))
+
+```
+
+
+### Configuração Numérica ReSun^TM^
+
+Após conclusão das simulações mesoescala percussoras, com o objetivo de resolver todas as interações meteorológicas, ficaram disponíveis variáveis como: Short Wave Radiation, Temperature, Vapour Mixed Ratio e Surface Pressure para posterior ingestão pelo modelo ReSun^TM^. A estimativa da irradiação média diária em plano horizontal com o modelo ReSun^TM^, teve por base a ingestão diária de ficheiros com uma cadência de 10 minutos, sendo este o passo de tempo utilizado em cálculo. A `r figr("resun_tab", TRUE, type="Tab.")` resume a configuração numérica utilizada nas simulações ReSun^TM^.
+
+```{r resun_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
+
+tmy_tab <- data.frame(#Mês = months_name[2:13], 
+                      Modelo = c("WRF", 
+                                 "",
+                                 "Modelo de Céu Limpo", 
+                                 "AOD700nm / Turbidez (Massa de Ar 2)",
+                                 "",
+                                 "Modo de Correcção da Radiação de Céu Limpo",
+                                 "Modelo de Decomposição",
+                                 "Pontos da malha WRF usados em interpolações",
+                                 ""),
+                      Configuração = c("Resolução de 5km; Dados Climáticos FNL; Informação do", "terreno SRTM; Cobertura do Global Land Cover", 
+                                       "Simplified Solis Model",
+                                       "Informação de cadência diária dos Aerossóis para profundidade", "óptica de 700 nm, derivada a partir da TL2 da base SODA.",
+                                       "Fração Solar Global",
+                                       "Skartveit and Olseth model, 1998",
+                                       "4 (Interpolação tri-linear usando o conceito de distâncias", "efectivas com métodos de peso segundo Shepard)"))
+colnames(tmy_tab) <- c("", "Configuração")
+#row.names(tmy_tab) <- months_name[2:13]
+
+kable(tmy_tab, caption = 'Configuração ReSun^TM^', align = "c")
+
+```
+
+
+# Resultados
+***
+A aplicação da metodologia detalhada anteriormente conduziu às estimativas da distribuição do recurso solar para a área de interesse.
+A `r figr("IGPH_mad", TRUE, type="Tab.")`, `r figr("IGPH_ps", TRUE, type="Tab.")` que se segue apresenta a disponibilidade da média anual da radiação global diária em plano horizontal para o ano meteorológico típico.
+
+```{r IGPH_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Radiação Global no plano horizontal para a ilha da Madeira, par o TMY.", anchor = "Figura"}
+
+# croped use z matrix:
+# mat_rot(matrix(raster_IGPH[], ncol = raster_IGPH@ncols, nrow = raster_IGPH@nrows, byrow = T))
+# non croped use z matrix:
+# t(IGPH[,,1])
+filled.contour(long, lat, mat_rot(matrix(raster_IGPH[], ncol = raster_IGPH@ncols, nrow = raster_IGPH@nrows, byrow = T)), col = viridis(n = 17, alpha = 1, begin = 0, end = 1, option = "A"), asp = 1, xlim = range(long, finite = TRUE), ylim = range(lat, finite = TRUE), # nlevels = 400, #axes = F #(12), nlev=13,
+               plot.axes = {
+                 axis(1); 
+                 axis(2); 
+                 grid(NULL,NULL,lty = 5, lwd = 0.5);
+                 plot(land, add = T); text(getSpPPolygonsLabptSlots(land), labels=as.character(land$NAME_2), cex=.5)
+                 },
+               key.title = title(main = as.expression(paste("[W/m^2]"))),
+               plot.title = title(main = "Radiação Global Madeira", xlab = 'Longitude [°]', ylab = 'Latitude [°]'))
+
+```
+
+```{r IGPH_ps, warning=F, echo=FALSE, message=FALSE, fig.cap="Radiação Global no plano horizontal ilha do Porto Santo, par o TMY.", anchor = "Figura"}
+
+filled.contour(long_ps, lat_ps, mat_rot(matrix(raster_IGPH_merg[], ncol = raster_IGPH_merg@ncols, nrow = raster_IGPH_merg@nrows, byrow = T)), col = viridis(n = 17, alpha = 1, begin = 0, end = 1, option = "A"), asp = 1, xlim = range(long_ps, finite = TRUE), ylim = range(lat_ps, finite = TRUE), # nlevels = 400, #axes = F #(12), nlev=13,
+               plot.axes = {
+                 axis(1); 
+                 axis(2); 
+                 grid(NULL,NULL,lty = 5, lwd = 0.5);
+                 plot(land, add = T); text(getSpPPolygonsLabptSlots(land), labels=as.character(land$NAME_2), cex=.5)
+                 },
+               key.title = title(main = as.expression(paste("[W/m^2]"))),
+               plot.title = title(main = "Radiação Global Porto Santo", xlab = 'Longitude [°]', ylab = 'Latitude [°]'))
+
+```
+
+
+# Validação dos resultados
+***
+A incerteza associada aos resultados da modelação da radiação solar é sempre um processo complexo e dependente de inúmeras fontes que contribuem para a sua estimativa, sempre aproximada. Destaca-se que os principais controladores que afetam a modelação da radiação solar são essencialmente a nebulosidade e o estado de pureza da atmosfera. Para uma se proceder a uma validação do desempenho do modelo é necessária a existência de dados fidedignos e distribuídos ao longo de diferentes condições atmosféricas, o que na maior parte das vezes não acontece face a escassez de medições.
+A ilha da Madeira embora apresente uma área relativamente pequena, esta é composta por uma topografia muito acidentada, que faz com que hajam microclimas e sazonalidade climática, estes casos tornam imperativo o uso de abordagens científicas mais sofisticadas para qualquer modelação energética que exija dados solares como entrada.
+Nas tabelas 3 e 4 são apresentadas as medidas estatísticas de erro médio relativo, rMB, Root Mean Square relativo, rRMS, desvio padrão relativo, rSTD, e o erro relativo absoluto máximo para diferentes cenários de probabilidade (50%, 80% e 90%), respetivamente.
+
+
+# Considerações
+***
 
 
 ```{r, echo=FALSE}
+
 # abrir shiny app
 #shinyAppFile("../Shiny_app/app.R", options=list(width="100%", height=400))
+
 ```
 
-
 ```{r stations, echo=FALSE, message=FALSE}
-library(ggplot2)
 
 
 #print(data, type="html")
@@ -164,35 +392,106 @@ library(ggplot2)
 
 
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-image(t(IGPH[,,1]), asp = .5)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
-
 # Bibliografia
+***
 
 ---
 references:
-- id: fenner2012a
-  title: One-click science marketing
+- id: skamarock2005
+  title: A description of the Advanced Research WRF Version 2
   author:
-  - family: Fenner
-    given: Martin
-  container-title: Nature Materials
-  volume: 11
-  URL: 'http://dx.doi.org/10.1038/nmat3283'
-  DOI: 10.1038/nmat3283
-  issue: 4
-  publisher: Nature Publishing Group
-  page: 261-263
+  - family: Skamarock
+    given: W. C., J. B. Klemp, J. Dudhia, D. O. Gill, D. M. Barker, W. Wang, and J. G. Powers
+  container-title: 
+  publisher: NCAR Tech Notes-468+STR
+  type: article-journal
+  issued:
+    year: 2005
+
+- id: lo2007
+  title: Assessment of three dynamical climate downscaling methods using the Weather Research and Forecasting (WRF) model
+  author:
+  - family: Lo
+    given: J. C.-F., Z.-L. Yang, and R. A. Pielke Sr
+  container-title: 
+  publisher: NCAR Tech Notes-468+STR
+  type: article-journal
+  issued:
+    year: 2007
+
+- id: gfs2003
+  title: Global Climate and Weather Modeling Branch
+  author:
+  - family:
+    given:
+  container-title: The GFS Atmospheric Model
+  publisher: NCEP OFFICE NOTE 442
+  type: article-journal
+  issued:
+    year: 2003
+
+- id: farr2000
+  title: Shuttle Radar Topography Mission produces a wealth of data
+  author:
+  - family: Farr
+    given: T.G., M. Kobrick
+  container-title: Amer. Geophys. Union Eos
+  publisher: NCEP OFFICE NOTE 442
+  type: article-journal
+  issued:
+    year: 2000
+
+- id: gemmill2007
+  title: Daily Real-Time Global Sea Surface Temperature - High Resolution Analysis at NOAA/NCEP
+  author:
+  - family: Gemmill
+    given: William, Bert Katz and Xu Li
+  container-title: 
+  publisher: NOAA / NWS / NCEP / MMAB Office Note Nr. 260
+  type: article-journal
+  issued:
+    year: 2007
+
+- id: sellers1996
+  title: A revised land surface parameterization (SiB2) for atmospheric GCMs - Part I-model formulation
+  author:
+  - family: Sellers
+    given: P.J., Randall, D.A., Collatz, G.J., Berry, J.A., Field, C.B., Dazlich, D.A., Zhang, C., Collelo, G.D., and Bounoua
+  container-title: 
+  publisher: Journal of Climate, v. 9
+  type: article-journal
+  issued:
+    year: 1996
+
+- id: finkelstein1971
+  title:  Improved goodness-of-fit tests. Biometrika
+  author:
+  - family: Finkelstein JM
+    given: Schafer RE.
+  container-title: 
+  publisher: Biometrika
+  type: article-journal
+  issued:
+    year: 1971
+
+- id: gueymard2012
+  title: emporal variability in direct and global irradiance at various time scales as affected by aerosols
+  author:
+  - family: Gueymard
+    given: C.A.
+  container-title: Science Direct
+  publisher: Solar Energy 86
   type: article-journal
   issued:
     year: 2012
-    month: 3
+        
+- id: pereira2013
+  title: Re.Sun^TM^ - Validation White Paper
+  author:
+  - family: Pereira
+    given: Rui
+  container-title: Comunicação Pessoal
+  issued:
+    year: 2013
 ---
+

@@ -673,7 +673,7 @@ if (stat_coords == 0) {
       }
       
       #save objects for shiny app & static paper
-      save(m_D02, x_D02, long, lat, hgt, locs, d, d_tot, IGPH, Kt, raster_IGPH, raster_Kt, raster_IDIF, raster_IDIR, raster_DIFGPH, rgb.palette.rad, max_IGPH, months_name, file = "output/data.RData")
+      save(m_D02, x_D02, long, lat, land, hgt, locs, d, d_tot, IGPH, Kt, raster_IGPH, raster_Kt, raster_IDIF, raster_IDIR, raster_DIFGPH, rgb.palette.rad, max_IGPH, months_name, file = "output/data.RData")
 }
 #save objects for shiny app
 save(locs, d, d_tot, file = "output/data_coords.RData")
