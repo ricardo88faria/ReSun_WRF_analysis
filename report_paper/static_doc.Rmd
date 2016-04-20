@@ -75,7 +75,7 @@ colors <- brewer.pal(9, "BuGn")
 mapImage <- get_map(location = c(lon = lon_coords, lat = lat_coords),
   color = "color",
   source = "google",
-  maptype = "terrain",
+  maptype = "satellite",
   zoom = 10)
 
 ggmap(mapImage) +
@@ -187,17 +187,19 @@ kable(tmy_tab, caption = 'Dados do TMY', align = "c")
 
 ```
 
-Nas seguintes Figuras pode ser consultada a evolução da frequência cumulativa diária da radiação global e Temperatura para cada um dos meses do TMY.
+Na `r figr("tmy1", TRUE, type="Fig.")`, `r figr("tmy2", TRUE, type="Fig.")`, `r figr("tmy3", TRUE, type="Fig.")`, `r figr("tmy4", TRUE, type="Fig.")`, `r figr("tmy5", TRUE, type="Fig.")` e `r figr("tmy6", TRUE, type="Fig.")` pode ser consultada a evolução da frequência cumulativa diária da radiação global e Temperatura para cada um dos meses do TMY.
 
-#### Para os valores de Radiação medidos:
-![Título.](ReSun/tmy/Irradiance_CDF Monthly_Ja_Ap.png)
-![jfffjf.](ReSun/tmy/Irradiance_CDF Monthly_My_Ag.png)
-![Cklj.](ReSun/tmy/Irradiance_CDF Monthly_Sp_Dc.png)
+![Evolução da frequência cumulativa diária da radiação global nos meses de Janeiro a Abril do TMY.](ReSun/tmy/Irradiance_CDF Monthly_Ja_Ap.png "tmy1")
 
-#### Para os valores de Tempreatura medidos:
-![cjllclnb.](ReSun/tmy/Temperature_CDF Monthly_Ja_Ap.png)
-![,mn,b,e.](ReSun/tmy/Temperature_CDF Monthly_My_Ag.png)
-![vhkvhuuu.](ReSun/tmy/Temperature_CDF Monthly_Sp_Dc.png)
+![Evolução da frequência cumulativa diária da radiação global nos meses de Maio a Agosto do TMY.](ReSun/tmy/Irradiance_CDF Monthly_My_Ag.png "tmy2")
+
+![Evolução da frequência cumulativa diária da radiação global nos meses de Setembro a Dezembro do TMY.](ReSun/tmy/Irradiance_CDF Monthly_Sp_Dc.png "tmy3")
+
+![Evolução da frequência cumulativa diária da temperatura nos meses de Janeiro a Abril do TMY.](ReSun/tmy/Temperature_CDF Monthly_Ja_Ap.png "tmy4")
+
+![Evolução da frequência cumulativa diária da temperatura nos meses de Maio a Agosto do TMY.](ReSun/tmy/Temperature_CDF Monthly_My_Ag.png "tmy5")
+
+![Evolução da frequência cumulativa diária da temperatura nos meses de Setembro a Dezembro do TMY.](ReSun/tmy/Temperature_CDF Monthly_Sp_Dc.png "tmy6")
 
 
 ### Profundidade Ótica dos Aerossóis
@@ -328,7 +330,7 @@ kable(tmy_tab, caption = 'Configuração ReSun^TM^', align = "c")
 # Resultados
 ***
 A aplicação da metodologia detalhada anteriormente conduziu às estimativas da distribuição do recurso solar para a área de interesse.
-A `r figr("IGPH_mad", TRUE, type="Tab.")`, `r figr("IGPH_ps", TRUE, type="Tab.")` que se segue apresenta a disponibilidade da média anual da radiação global diária em plano horizontal para o ano meteorológico típico.
+A `r figr("IGPH_mad", TRUE, type="Fig")`, `r figr("IGPH_ps", TRUE, type="Fig.")` que se segue apresenta a disponibilidade da média anual da radiação global diária em plano horizontal para o ano meteorológico típico.
 
 ```{r IGPH_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Radiação Global no plano horizontal para a ilha da Madeira, par o TMY.", anchor = "Figura"}
 
