@@ -1,23 +1,42 @@
 ---
 title: "Atlas da Radiação Solar da Ilha da Madeira"
-author: "Ricardo Faria"
+author: "Ricardo Jorge Agrela Faria"
 date: '`r format(Sys.Date())`'
 output:
+  html_document:
+    fig_caption: yes
+    theme: spacelab
   pdf_document:
     fig_caption: yes
     keep_tex: yes
     number_sections: yes
-  html_document: default
+  word_document: default
 graphics: yes
+header-includes:
+- \usepackage[portuguese]{babel}
+- \usepackage{lscape}
+- \usepackage{wallpaper}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[CO,CE]{}
+- \fancyfoot[CO,CE]{Atlas da Radiação Solar da Ilha da Madeira}
+- \fancyfoot[LE,RO]{\thepage}
+email: ricardo88faria@gmail.com
 documentclass: article
 ---
 
 
 ```{r setup, include=FALSE}
 
-# adicionar \usepackage[portuguese]{babel} ao ficheiro latex (.tex)
+#rmarkdown templates
+library(tufte)
+library(rticles)
+
 library(shiny)
 library(knitr)
+library(pander)
 library(kfigr)
 library(captioner)
 library(ggplot2)
@@ -31,7 +50,6 @@ library(sp)
 
 library(ggmap)
 library(RColorBrewer)
-
 
 #library(knitcitations); cleanbib()
 #cite_options(citation_format = "pandoc", check.entries=FALSE)
@@ -47,17 +65,22 @@ options(knitr.table.format = 'pandoc')
 
 proj <- CRS("+proj=longlat +datum=WGS84 +towgs84=-160.410,-21.066,-99.282,2.437,-17.250,-7.446,0.168 +wktext +no_defs ") #CRS('+proj=longlat +datum=WGS84')
 land <- readShapeSpatial("../input/map/PRT_adm2.shp", proj4string = proj)
-land_cities <- readShapePoly("../input/map/PRT_adm2.shp", proj4string = proj)
+#land_cities <- readShapePoly("../input/map/PRT_adm2.shp", proj4string = proj)
+
 ```
 
 
 # Introdução
+
 ***
+
 A realização do estudo do Atlas da Radiação Solar da Ilha da Madeira, teve iniciativa no estágio do Eng. Ricardo Faria no [LREC](<http://www.lrec.pt>). Este novo Atlas foi realizada com novos modelos matemáticos, [WRF](<http://www.wrf-model.org>) para modelação do clima e o ReSun^TM^ para modelar a distribuição do recurso solar, em plano horizontal, de modo a identificar de regiões com maior potencial solar, este último é usado com a colaboração da Empresa [Megajoule Inovação](<http://megajoule.pt>).
 
 
-# Localização e Decrição
+# Localização e Descrição
+
 ***
+
 A região em estudo é a ilha da Madeira, que é a principal ilha do arquipélago da Madeira, situado no oceano Atlântico, a sudoeste da costa portuguesa. Encontra-se entre as longitudes -17.3º a -16.64º e latitudes 32.6º a 32.9º. O ponto culminante situa-se no Pico Ruivo, 1.862 m de altura, a ilha é composta por um perímetro	179.3 km e área de 742.41  km^2^.
 O [LREC](<http://www.lrec.pt>) dispõe de uma vasta rede de Estações Meteorológicas Automáticas (EMA) distribuidas por toda a ilha, representada na `r figr("ggmap", TRUE, type="Fig.")` e  `r figr("est_tab", TRUE, type="Tab.")`.
 
@@ -65,7 +88,7 @@ O [LREC](<http://www.lrec.pt>) dispõe de uma vasta rede de Estações Meteorol�
 #\ref{fig:ggmap}
 ```
 
-```{r ggmap, echo=FALSE,  message=FALSE, anchor = "Figura", fig.cap = "Localização da posição das EMAS que pertencem ao LREC"}
+```{r ggmap, echo=FALSE,  message=FALSE, anchor = "Figura", fig.cap = "Localização da posição das EMAS que pertencem ao LREC", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
 
 data <- fortify(locs)
 lon_coords <- long[length(long)/2]
@@ -84,14 +107,14 @@ ggmap(mapImage) +
              alpha = 1) +
       scale_color_brewer(palette="Paired") +
       theme_bw() +
-      labs(x = "Longitude", y = "Latitude")
+      labs(x = "Longitude [º]", y = "Latitude [º]")
       
 ```
 
 
 ```{r est_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
 
-kable(data, caption = 'Localização das EMAS', align = "c")
+kable(data, caption = 'Localização das EMAS em latlong [º]', align = "c")
 
 ```
 
@@ -103,9 +126,9 @@ Devido à sua latitude, a ilha da Madeira apresenta todas as características de
 
 ## Topografia
 
-A ilha da Madeira apresenta uma topografia muito montanhosa, com profundos vales incrustados entre os picos e suas caraterísticas falésias.
+A ilha da Madeira apresenta uma topografia muito montanhosa, com profundos vales incrustados entre os picos e suas caraterísticas falésias. A `r figr("topography", TRUE, type="Fig.")`representa a topografia complexa da ilha da Madeira com isolinhas.
 
-```{r topography, echo=FALSE, message=FALSE, fig.cap="Topografia com linhas de cota em [m].", anchor = "Figura"}
+```{r topography, echo=FALSE, message=FALSE, fig.cap="Topografia com isolinhas de Altura [m].", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
 
 contour(long, lat, t(hgt), asp =1.1, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)), xlab = 'Longitude [°]', ylab = 'Latitude [°]')
 grid(NULL,NULL,lty = 5, lwd = 0.5)
@@ -114,7 +137,9 @@ grid(NULL,NULL,lty = 5, lwd = 0.5)
 
 
 # Recurso da Energia Solar
+
 ***
+
 A radiação solar incidente na superfície terrestre resulta de uma complexa interacção entre atmosfera e a superfície. Numa escala mais global, fazem-se notar os gradientes da latitude causados pela geometria da terra e pelo seu movimento relativo ao sol (translação e rotação). Numa escala regional e até local, a morfologia do terreno é o maior factor de modificação da distribuição da radiação solar, variando em resposta à elevação, inclinação da superfície, orientação e sombreamento. A atenuação atmosférica, efeitos de dispersão e absorção pelos gases, partículas sólidas e líquidas, bem como a nebulosidade, agem como factores depreciativos dos valores de radiação.
 A radiação que chega à superfície terrestre é selectivamente atenuada pela atmosfera, sendo a radiação directa a componente que não é reflectida nem dispersa. A radiação que é dispersa origina a radiação difusa e, por fim, uma pequena parte é reflectida (apenas em superfícies inclinadas) causando a radiação reflectida. Estas três componentes da radiação juntas, dão origem à radiação global ou onda curta.
 Dada a atenuação da radiação, a quantidade de energia que actualmente chega à Terra, habitualmente, não excede os 70 % daquela que se encontra fora da nossa atmosfera, designada de extraterrestrial. Comummente as regiões de baixa latitude e especialmente com climas secos, expressam, tipicamente, os índices de radiação médios mais altos.
@@ -123,7 +148,9 @@ O recurso solar num dado local é caracterizado pela radiação ou irradiação 
 
 
 # Metodologia
+
 ***
+
 Metodologia a usar na elaboração do novo Atlas Solar do Arquipélago da Madeira:
 A estimativa do recurso solar será executada pelo código de simulação ReSun^TM^ (Pereira et al 2013) na sua variante de modelação, que se encontra capacitada para modelar os principais factores que afectam a magnitude do recurso solar, permitindo assim apurar a verdadeira valia da distribuição do recurso solar de uma forma mais detalhada. A modelação ReSun^TM^ faz uso de resultados das simulações meteorológicas WRF (Weather Research & Forecasting Model), num procedimento designado de downscaling, que engloba simulações idealizadas (céu limpo) nos pontos de uma malha de cálculo (mapeamento) ou pontos discretos de interesse (séries dados). São usadas técnicas de decomposição da radiação e métodos de interpolação por recurso a distância efetivas.
 As simulações a usar na obtenção do Atlas Solar serão realizadas para um período temporal equivalente a um ano meteorológico típico, selecionado a partir das Estações Meteorológicas Automáticas distribuídas pelo arquipélago da Madeira e com auxilio, se necessário, de dados provenientes de uma análise retrospetiva do programa MERRA (Modern-Era Retrospective Analysis For Research And Applications). Os dados das estações serão processados e analisados com o módulo QC (Solar Data Quality Check) do ReSun^TM^, onde se fará uma análise de consistência das medições de radiação global das estações. Será também realizada uma averiguação da performance do ReSun^TM^ para um ano a selecionar a partir das medições locais.
@@ -156,12 +183,12 @@ Para efeitos de simulação o ReSun^TM^ assume valores de cadência diária de A
 
 Em termos gerais, a previsão da performance a longo prazo de qualquer sistema energético solar depende da existência de uma extensa e fiável base climática local. Teoricamente, esta análise energética deve ser realizada usando-se vários anos de dados climáticos, o que na maior parte das vezes não é possível dada a sua inexistência. Isto leva-nos a ter de recorrer a informação proveniente de bases climáticas de larga escala obtidas através de modelos de simulação avançados. Contudo, o uso de períodos extensões para simulação são computacionalmente exigentes, tornando as análises demasiado morosas e dispendiosas. A variabilidade inter anual das condições climáticas motiva a necessidade de se derivar uma base que represente as condições médias de longo prazo num único ano. Comummente isto é conseguido através de um ano meteorológico típico (Typical Meterological Year, TMY) constituído pela informação dos 12 meses mais representativos.
 O método estatístico utilizado para estimativa do TMY foi o de Filkenstein – Shafer (FS) devidamente implementado pela [Megajoule Inovação](<http://megajoule.pt>) [@finkelstein1971]. O método baseia a seleção dos meses através de uma análise da frequência cumulativa da média diária dos valores de Radiação Global e Temperatura para cada um dos meses de um ano civil, Janeiro a Dezembro. De uma forma resumida, a escolha do ano para cada um dos meses resultará do que apresentar o menor somatório de erros diários de frequências cumulativas de um mês em especifico, de um dado ano, face ao longo termo do mês. De salientar que os erros obtidos para cada uma das variáveis incluídas na análise do TMY são sujeitas a uma ponderação utilizando-se pesos diferentes, 70% e 30%, radiação solar global e temperatura, respetivamente.
-Para obtenção de um TMY que caracterize de uma forma fiável a distribuição da radiação global de longo prazo e que reflita a variabilidade climática na área de interesse, recorreu-se a dados horários de radiação solar global e temperatura provenientes da Reanálise MERRA da NASA. Foram extraídos 30 pontos nativos da malha MERRA, distribuídos ao longo da área de interesse, para os últimos 10 anos (2005 – 2015) para apoio à seleção de 12 meses típicos que compõem o TMY. Na `r figr("ggmap", TRUE, type="Fig.")` pode ser consultada a distribuição geográfica dos pontos.
+Para obtenção de um TMY que caracterize de uma forma fiável a distribuição da radiação global de longo prazo e que reflita a variabilidade climática na área de interesse, recorreu-se a dados horários de radiação solar global e temperatura provenientes da Reanálise MERRA da NASA. Foram extraídos 30 pontos nativos da malha MERRA, distribuídos ao longo da área de interesse, para os últimos 10 anos (2005 – 2015) para apoio à seleção de 12 meses típicos que compõem o TMY.
 Após extração da informação para os 30 pontos, foi realizada uma integração da informação de cada ponto para um único ficheiro de forma a permitir a análise estatística para a área de interesse. A `r figr("tmy_tab", TRUE, type="Tab.")` apresenta a informação relativa anos obtidos para cada um dos meses do TMY e o valor médio do erro absoluto ponderado (Radiação e Temperatura) face ao longo termo.
 
 ```{r cob_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
 
-file_csv <- Sys.glob("ReSun/*.csv")
+file_csv <- Sys.glob("ReSun/Analysis_tmy_total.csv")
 tmy_values <- read.csv(file_csv, sep = ";")
 
 tx_cob <- data.frame(tax_cob_tmy = tmy_values[47:54,2:13])
@@ -189,17 +216,17 @@ kable(tmy_tab, caption = 'Dados do TMY', align = "c")
 
 Na `r figr("tmy1", TRUE, type="Fig.")`, `r figr("tmy2", TRUE, type="Fig.")`, `r figr("tmy3", TRUE, type="Fig.")`, `r figr("tmy4", TRUE, type="Fig.")`, `r figr("tmy5", TRUE, type="Fig.")` e `r figr("tmy6", TRUE, type="Fig.")` pode ser consultada a evolução da frequência cumulativa diária da radiação global e Temperatura para cada um dos meses do TMY.
 
-![Evolução da frequência cumulativa diária da radiação global nos meses de Janeiro a Abril do TMY.](ReSun/tmy/Irradiance_CDF Monthly_Ja_Ap.png "tmy1")
+![Evolução da frequência cumulativa diária da radiação global nos meses de Janeiro a Abril do TMY.](ReSun/tmy/Irradiance_CDF_Monthly_Ja_Ap.png "tmy1")
 
-![Evolução da frequência cumulativa diária da radiação global nos meses de Maio a Agosto do TMY.](ReSun/tmy/Irradiance_CDF Monthly_My_Ag.png "tmy2")
+![Evolução da frequência cumulativa diária da radiação global nos meses de Maio a Agosto do TMY.](ReSun/tmy/Irradiance_CDF_Monthly_My_Ag.png "tmy2")
 
-![Evolução da frequência cumulativa diária da radiação global nos meses de Setembro a Dezembro do TMY.](ReSun/tmy/Irradiance_CDF Monthly_Sp_Dc.png "tmy3")
+![Evolução da frequência cumulativa diária da radiação global nos meses de Setembro a Dezembro do TMY.](ReSun/tmy/Irradiance_CDF_Monthly_Sp_Dc.png "tmy3")
 
-![Evolução da frequência cumulativa diária da temperatura nos meses de Janeiro a Abril do TMY.](ReSun/tmy/Temperature_CDF Monthly_Ja_Ap.png "tmy4")
+![Evolução da frequência cumulativa diária da temperatura nos meses de Janeiro a Abril do TMY.](ReSun/tmy/Temperature_CDF_Monthly_Ja_Ap.png "tmy4")
 
-![Evolução da frequência cumulativa diária da temperatura nos meses de Maio a Agosto do TMY.](ReSun/tmy/Temperature_CDF Monthly_My_Ag.png "tmy5")
+![Evolução da frequência cumulativa diária da temperatura nos meses de Maio a Agosto do TMY.](ReSun/tmy/Temperature_CDF_Monthly_My_Ag.png "tmy5")
 
-![Evolução da frequência cumulativa diária da temperatura nos meses de Setembro a Dezembro do TMY.](ReSun/tmy/Temperature_CDF Monthly_Sp_Dc.png "tmy6")
+![Evolução da frequência cumulativa diária da temperatura nos meses de Setembro a Dezembro do TMY.](ReSun/tmy/Temperature_CDF_Monthly_Sp_Dc.png "tmy6")
 
 
 ### Profundidade Ótica dos Aerossóis
@@ -209,18 +236,12 @@ Neste estudo a radiação solar considera informação da Turbidez atmosférica 
 O projeto SODA contém informação dos valores mensais da TL2, provenientes de uma sobreposição de várias fontes e através de estimativas diretas e indiretas da Turbidez atmosférica para uma massa de ar igual a 2, METEOTEST (Redmund et al ., 2003).
 Face à utilização do modelo Simplified Solis, que faz uso de valores AOD para descrever a pureza da atmosfera, existe a necessidade da conversão de valores de TL2 em valores de AOD para um comprimento de onde de 700nm. A formulação proposta por Ineichen, Pierre, 2008 foi usada para o propósito de conversão.
 
-```{r aod_ps, echo=FALSE, message=FALSE, fig.cap="Cálculo dos horizontes, direção de Norte no Porto Santo.", anchor = "Figura"}
-
-
-
-```
-
 
 ### Dados topográficos e horizontes
 
-Para definição digital da topografia, foram utilizados dados dos modelos digitais de elevação provenientes do projeto SRTM. A resolução final da grelha de altimetria a utilizar nos cálculos foi de 500 m. O MJ Inovação possui uma vasta experiência na avaliação e uso desta uma informação, sendo usada de uma forma recorrente em diversos projetos espalhados pelo mundo.
+Para definição digital da topografia, foram utilizados dados dos modelos digitais de elevação provenientes do projeto SRTM. A resolução final da grelha de altimetria a utilizar nos cálculos foi de 100 m, resultando nas `r figr("srtm_topo_mad", TRUE, type="Fig.")` e `r figr("srtm_topo_ps", TRUE, type="Fig.")`.
 
-```{r srtm_topo_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 500m de resolução da Ilha da Madeira.", anchor = "Figura"}
+```{r srtm_topo_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 100m de resolução da Ilha da Madeira.", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
 
 hgt[hgt == 0] <- NA
 
@@ -230,34 +251,32 @@ filled.contour(long, lat, t(hgt),  col = terrain.colors(20), asp = 1, # nlevels 
                  axis(1); 
                  axis(2); 
                  grid(NULL,NULL,lty = 5, lwd = 0.5);
-                                  plot(land, add = T); text(getSpPPolygonsLabptSlots(land), labels=as.character(land$NAME_2), cex=.5)
-
+                 plot(land, add = T); text(getSpPPolygonsLabptSlots(land), labels=as.character(land$NAME_2), cex=.5)
                  },
                key.title = title(main = as.expression(paste("[m]"))))
 
 ```
 
-```{r srtm_topo_ps, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 500m de resolução da Ilha do Porto Santo.", anchor = "Figura"}
+```{r srtm_topo_ps, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 100m de resolução da Ilha do Porto Santo.", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
 
 hgt_ps[hgt_ps == 0] <- NA
 
-filled.contour(long_ps, lat_ps, t(hgt_ps),  col = terrain.colors(31), asp = 1, # nlevels = 400, #axes = F #(12), nlev=13,
+filled.contour(long_ps, lat_ps, t(hgt_ps), col = terrain.colors(31), asp = 1, # nlevels = 400, #axes = F #(12), nlev=13,
                plot.title = title(xlab = 'Longitude [°]', ylab = 'Latitude [°]'),
                plot.axes = {
                  axis(1); 
                  axis(2); 
                  grid(NULL,NULL,lty = 5, lwd = 0.5);
-                                  plot(land, add = T); text(getSpPPolygonsLabptSlots(land), labels=as.character(land$NAME_2), cex=.5)
+                 plot(land, add = T); text(getSpPPolygonsLabptSlots(land), labels=as.character(land$NAME_2), cex=.5)
                  },
                key.title = title(main = as.expression(paste("[m]"))))
 
 ```
 
+A descrição direcional das elevações em graus, horizontes, foi realizada segundo o método proposto por Dozier et al.1980 e teve por base a informação de altimétrica na resolução de 100m. Na estimativa dos horizontes foram utilizados 96 sectores direcionais permitindo estimar os efeitos de sombreamento e consequente influência sobre o défice de energia.
+Na `r figr("hori_ps_N", TRUE, type="Fig.")` pode ser consultado com maior detalhe a informação topográfica de entrada, e o mapa de horizontes para a direção de 0º (Norte) e 90º (Este).
 
-A descrição direcional das elevações em graus, horizontes, foi realizada segundo o método proposto por Dozier et al.1980 e teve por base a informação de altimétrica na resolução de 500m. Na estimativa dos horizontes foram utilizados 96 sectores direcionais permitindo estimar os efeitos de sombreamento e consequente influência sobre o défice de energia.
-Na `r figr("hori_ps_N", TRUE, type="Fig.")` e `r figr("hori_ps_E", TRUE, type="Fig.")` pode ser consultado com maior detalhe a informação topográfica de entrada, e o mapa de horizontes para a direção de 0º (Norte) e 90º (Este).
-
-```{r hori_ps_N, echo=FALSE, message=FALSE, fig.cap="Cálculo dos horizontes, direção de Norte no Porto Santo.", anchor = "Figura"}
+```{r hori_ps_N, echo=FALSE, message=FALSE, fig.cap="Cálculo dos horizontes, direção de Norte e Este no Porto Santo.", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9, fig.show='hold'}
 
 hor_file_ps <- h5file("ReSun/horiz/PTS_100x100/hor_mapcal_96.mat")
 hor_mat_ps <- hor_file_ps["matrixtotalf"][]
@@ -276,14 +295,7 @@ filled.contour(hor_mat_ps[4,,], col = viridis(n = 20, alpha = 1, begin = 0, end 
                  grid(NULL,NULL,lty = 5, lwd = 0.5)
                  },
                key.title = title(main = as.expression(paste("[º]"))),
-               plot.title = title(main = "Horizontes"))
-
-```
-
-```{r hori_ps_E, echo=FALSE, message=FALSE, fig.cap="Cálculo dos horizontes, direção de Este no Porto Santo.", anchor = "Figura"}
-
-
-#image.plot(hor_mat_ps[27,,], col = viridis(n = 31, alpha = 1, begin = 0, end = 1, option = "D"), axes=T, legend.lab="[m/s]") #,  xlab='Longitude [°]', ylab='Latitude [°]'
+               plot.title = title(main = "Horizontes - Este"))
 
 filled.contour(hor_mat_ps[27,,], col = viridis(n = 20, alpha = 1, begin = 0, end = 1, option = "A"), # nlevels = 400, #axes = F #(12), nlev=13,
                plot.axes = {
@@ -292,7 +304,7 @@ filled.contour(hor_mat_ps[27,,], col = viridis(n = 20, alpha = 1, begin = 0, end
                  grid(NULL,NULL,lty = 5, lwd = 0.5);
                  },
                key.title = title(main = as.expression(paste("[º]"))),
-               plot.title = title(main = "Horizontes"))
+               plot.title = title(main = "Horizontes - Norte"))
 
 ```
 
@@ -304,35 +316,83 @@ Após conclusão das simulações mesoescala percussoras, com o objetivo de reso
 ```{r resun_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
 
 tmy_tab <- data.frame(#Mês = months_name[2:13], 
-                      Modelo = c("WRF", 
-                                 "",
+                      Modelo = c("WRF",
                                  "Modelo de Céu Limpo", 
                                  "AOD700nm / Turbidez (Massa de Ar 2)",
-                                 "",
                                  "Modo de Correcção da Radiação de Céu Limpo",
                                  "Modelo de Decomposição",
-                                 "Pontos da malha WRF usados em interpolações",
-                                 ""),
-                      Configuração = c("Resolução de 5km; Dados Climáticos FNL; Informação do", "terreno SRTM; Cobertura do Global Land Cover", 
+                                 "Pontos da malha WRF usados em interpolações"
+                                 ),
+                      Configuração = c("Resolução de 5km; 
+                                       Dados Climáticos FNL; 
+                                       Informação do terreno SRTM; 
+                                       Cobertura do Global Land Cover", 
                                        "Simplified Solis Model",
-                                       "Informação de cadência diária dos Aerossóis para profundidade", "óptica de 700 nm, derivada a partir da TL2 da base SODA.",
+                                       "Informação de cadência diária dos Aerossóis para profundidade óptica de 700 nm,
+                                       derivada a partir da TL2 da base SODA",
                                        "Fração Solar Global",
                                        "Skartveit and Olseth model, 1998",
-                                       "4 (Interpolação tri-linear usando o conceito de distâncias", "efectivas com métodos de peso segundo Shepard)"))
+                                       "4 (Interpolação tri-linear usando o conceito de distâncias efectivas com métodos de peso segundo Shepard)"))
 colnames(tmy_tab) <- c("", "Configuração")
 #row.names(tmy_tab) <- months_name[2:13]
 
-kable(tmy_tab, caption = 'Configuração ReSun^TM^', align = "c")
-
+#pandoc.table(tmy_tab, caption = 'Configuração ReSun^TM^.', style = "rmakdown", justify = "left")
+pander(tmy_tab, caption = 'Configuração ReSun^TM^.', keep.line.breaks = TRUE, style = 'grid', justify = 'left')
 ```
 
 
-# Resultados
-***
-A aplicação da metodologia detalhada anteriormente conduziu às estimativas da distribuição do recurso solar para a área de interesse.
-A `r figr("IGPH_mad", TRUE, type="Fig")`, `r figr("IGPH_ps", TRUE, type="Fig.")` que se segue apresenta a disponibilidade da média anual da radiação global diária em plano horizontal para o ano meteorológico típico.
+## Correção dos Valores de Radiação Global
 
-```{r IGPH_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Radiação Global no plano horizontal para a ilha da Madeira, par o TMY.", anchor = "Figura"}
+Considerando que o WRF, demostra uma tendência em sub estimar o valor da radiação com a evolução da altura topográfica, será usado preditores de modo a corrigir/atenuar essa sobrevalorização.
+O preditor para corrigir os valores de radiação global, é calculado através de valores de erro absoluto (rMB[%]) de radiação global no plano horizontal simulados no ReSun, nos pontos em que temos valores (EMAS) reais de modo a poder comparar esta evolução. Valores esses que estão apresentados na `r figr("corr_tab", TRUE, type="Tab.")`.
+
+```{r corr_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
+
+file_csv <- Sys.glob("ReSun/ReSun_Tests_Setup*.csv")
+corr_values <- read.csv(file_csv, sep = ",")
+corr_values_ggplot <- data.frame()
+
+corr_values <- corr_values[c(1:11), c(1, 4, 8, 9)] 
+
+corr_values$ecorr <- corr_values[10, 4]*corr_values[, 4] + corr_values[11, 4]
+#corr_values$corr <- corr_values$ecorr
+corr_values[c(10:11), c(5)] <- NA
+
+corr_values[c(1:9), -1] <- round(corr_values[c(1:9), -1], digits = 1)
+corr_values_ggplot <- corr_values
+colnames(corr_values) <- c("EMA", " Erro abs. [%]", "Rad. Sol. [W/m^2]", "Altura [m]", " Erro abs. corrigido [%]")
+
+kable(corr_values[1:9,], caption = 'Valores de Erro Absoluto, rMB[%], para as EMAS em estudo.', align = "c", digits = 3)
+
+```
+
+```{r corr_graph, warning=F, echo=FALSE, message=FALSE, fig.cap="Regressão linear de rMB da radiação global em função da Altura", anchor = "Figura", fig.retina=1, dpi=100, fig.width=7, fig.height=4}
+
+eq <- paste0("y=", round(corr_values[11,4], digits = 5), "x", round(corr_values[10,4], digits = 5))
+
+ggplot() +
+  geom_point(data = corr_values_ggplot[c(1:9),], aes(x = z, y = min_D03, color = X)) +
+  #geom_point(aes(x = z, y = ecorr, color = X)) +
+  labs(title = "rMB da Rad. Global VS Altura", x ="Cota [m]", y ="rMB [%]", colour = "EMA", size = 30) +
+  geom_abline(aes(intercept = corr_values[11,4], slope = corr_values[10,4]), color = "black") +
+  annotate("text", label = eq, x = 1400, y = 0, size = 3, colour = "black") +
+  scale_color_brewer(palette="Paired")
+
+```
+
+Este preditor segue uma regressão linear de rMB em função da radiação global em função da altura, representado na `r figr("corr_graph", TRUE, type="Fig.")`.
+
+
+# Resultados
+
+***
+
+A aplicação da metodologia detalhada anteriormente conduziu às estimativas da distribuição do recurso solar para a área de interesse.
+A `r figr("IGPH_mad", TRUE, type="Fig.")`, `r figr("IGPH_ps", TRUE, type="Fig.")` que se segue apresentam a disponibilidade da média anual da radiação global diária em plano horizontal para o ano meteorológico típico na Madeira e Porto Santo.
+
+
+\blandscape
+```{r IGPH_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Radiação Global no plano horizontal para a ilha da Madeira, par o TMY.", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
 
 # croped use z matrix:
 # mat_rot(matrix(raster_IGPH[], ncol = raster_IGPH@ncols, nrow = raster_IGPH@nrows, byrow = T))
@@ -349,8 +409,11 @@ filled.contour(long, lat, mat_rot(matrix(raster_IGPH[], ncol = raster_IGPH@ncols
                plot.title = title(main = "Radiação Global Madeira", xlab = 'Longitude [°]', ylab = 'Latitude [°]'))
 
 ```
+\elandscape
 
-```{r IGPH_ps, warning=F, echo=FALSE, message=FALSE, fig.cap="Radiação Global no plano horizontal ilha do Porto Santo, par o TMY.", anchor = "Figura"}
+
+\blandscape
+```{r IGPH_ps, warning=F, echo=FALSE, message=FALSE, fig.cap="Radiação Global no plano horizontal ilha do Porto Santo, par o TMY.", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
 
 filled.contour(long_ps, lat_ps, mat_rot(matrix(raster_IGPH_merg[], ncol = raster_IGPH_merg@ncols, nrow = raster_IGPH_merg@nrows, byrow = T)), col = viridis(n = 17, alpha = 1, begin = 0, end = 1, option = "A"), asp = 1, xlim = range(long_ps, finite = TRUE), ylim = range(lat_ps, finite = TRUE), # nlevels = 400, #axes = F #(12), nlev=13,
                plot.axes = {
@@ -363,16 +426,20 @@ filled.contour(long_ps, lat_ps, mat_rot(matrix(raster_IGPH_merg[], ncol = raster
                plot.title = title(main = "Radiação Global Porto Santo", xlab = 'Longitude [°]', ylab = 'Latitude [°]'))
 
 ```
+\elandscape
 
 
 # Validação dos resultados
+
 ***
+
 A incerteza associada aos resultados da modelação da radiação solar é sempre um processo complexo e dependente de inúmeras fontes que contribuem para a sua estimativa, sempre aproximada. Destaca-se que os principais controladores que afetam a modelação da radiação solar são essencialmente a nebulosidade e o estado de pureza da atmosfera. Para uma se proceder a uma validação do desempenho do modelo é necessária a existência de dados fidedignos e distribuídos ao longo de diferentes condições atmosféricas, o que na maior parte das vezes não acontece face a escassez de medições.
 A ilha da Madeira embora apresente uma área relativamente pequena, esta é composta por uma topografia muito acidentada, que faz com que hajam microclimas e sazonalidade climática, estes casos tornam imperativo o uso de abordagens científicas mais sofisticadas para qualquer modelação energética que exija dados solares como entrada.
 Nas tabelas 3 e 4 são apresentadas as medidas estatísticas de erro médio relativo, rMB, Root Mean Square relativo, rRMS, desvio padrão relativo, rSTD, e o erro relativo absoluto máximo para diferentes cenários de probabilidade (50%, 80% e 90%), respetivamente.
 
 
 # Considerações
+
 ***
 
 
@@ -383,18 +450,9 @@ Nas tabelas 3 e 4 são apresentadas as medidas estatísticas de erro médio rela
 
 ```
 
-```{r stations, echo=FALSE, message=FALSE}
-
-
-#print(data, type="html")
-
-#![Caption for the picture.](output/images/IGPH_corr_Jan.png)
-
-```
-
-
 
 # Bibliografia
+
 ***
 
 ---
