@@ -37,7 +37,7 @@ lat_view <- 32.7375
 #Contour <- rasterToContour(raster(hgt, xmn = long[1], xmx = long[length(long)], ymn = lat[1], ymx = lat[length(lat)], CRS('+proj=longlat +datum=WGS84')),maxpixels=100000,nlevels=10)       #toGeoJSON(as.vector(hgt), )
 #Contour_Leaflet <- toGeoJSON(Contour)
 
-locs <- locs
+#locs <- locs
 d <- rbind(d, subset(d_tot, Month=="TMY_corr"))
 
 rasterOptions(timer = T, progress = "text")
@@ -364,5 +364,6 @@ shinyServer(function(input, output, session) { # added ps for another raster, po
   
   output$page1 <- renderUI({
     includeHTML("report_paper/static_doc.html")
+    #includeMarkdown("report_paper/static_doc.md")
   })
 })
