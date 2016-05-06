@@ -1,17 +1,17 @@
 ---
-title: "Atlas da Radiação Solar da Ilha da Madeira"
+title: "Atlas da Radiação Solar da ilha da Madeira"
 author: "Ricardo Jorge Agrela Faria"
 date: '`r format(Sys.Date())`'
 output:
-  md_document:
-    toc: yes
-    toc_depth: 2
-    variant: markdown
   html_document:
     fig_caption: yes
     theme: spacelab
     toc: yes
     toc_depth: 2
+  md_document:
+    toc: yes
+    toc_depth: 2
+    variant: markdown
   pdf_document:
     fig_caption: yes
     keep_tex: yes
@@ -27,7 +27,7 @@ header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
 - \fancyhead[CO,CE]{}
-- \fancyfoot[CO,CE]{Atlas da Radiação Solar da Ilha da Madeira}
+- \fancyfoot[CO,CE]{Atlas da Radiação Solar da ilha da Madeira}
 - \fancyfoot[LE,RO]{\thepage}
 email: ricardo88faria@gmail.com
 documentclass: article
@@ -44,6 +44,7 @@ library(shiny)
 library(knitr)
 library(pander)
 library(kfigr)
+library(Cairo)
 library(captioner)
 library(ggplot2)
 library(reshape2)
@@ -57,9 +58,16 @@ library(sp)
 library(ggmap)
 library(RColorBrewer)
 
+# color for radiation
+rgb.palette.rad <- colorRampPalette(c("dodgerblue", "springgreen2", "yellow2", "orange", "tomato1", "violetred4", "purple"), space = "rgb")
+
+# turn antialias off in osx used dev="png", dev.args=list(type="cairo") in knitr::opts_chunk$set because of antialias problem in osx
+#quartz(antialias = F)
+
 #library(knitcitations); cleanbib()
 #cite_options(citation_format = "pandoc", check.entries=FALSE)
-knitr::opts_chunk$set(echo = TRUE, dpi = 100, fig.align = 'center', fig.lp = 'fig:') # dev = 'pdf',
+knitr::opts_chunk$set(echo = TRUE, dpi = 100, fig.align = 'center', fig.lp = 'fig:')
+#knitr::opts_chunk$set(echo = TRUE, dpi = 100, fig.align = 'center', fig.lp = 'fig:', dev.args=list(type="cairo")) # dev = 'CairoPDF',
 #knitr::opts_chunk$set(, dev = 'pdf')
 load("../output/data.RData")
 load("../output/data_coords.RData")
@@ -80,7 +88,7 @@ land <- readShapeSpatial("../input/map/PRT_adm2.shp", proj4string = proj)
 
 ***
 
-A realização do estudo do Atlas da Radiação Solar da Ilha da Madeira, teve iniciativa no estágio do Eng. Ricardo Faria no [LREC](<http://www.lrec.pt>). Este novo Atlas foi realizada com novos modelos matemáticos, [WRF](<http://www.wrf-model.org>) para modelação do clima e o ReSun^TM^ para modelar a distribuição do recurso solar, em plano horizontal, de modo a identificar de regiões com maior potencial solar, este último é usado com a colaboração da Empresa [Megajoule Inovação](<http://megajoule.pt>).
+A realização do estudo do Atlas da Radiação Solar da ilha da Madeira, teve iniciativa no estágio do Eng. Ricardo Faria no [LREC](<http://www.lrec.pt>). Este novo Atlas foi realizada com novos modelos matemáticos, [WRF](<http://www.wrf-model.org>) para modelação do clima e o ReSun^TM^ para modelar a distribuição do recurso solar, em plano horizontal, de modo a identificar de regiões com maior potencial solar, este último é usado com a colaboração da Empresa [Megajoule Inovação](<http://megajoule.pt>).
 
 
 # Localização e Descrição
@@ -132,7 +140,7 @@ Devido à sua latitude, a ilha da Madeira apresenta todas as características de
 
 ## Topografia
 
-A ilha da Madeira apresenta uma topografia muito montanhosa, com profundos vales incrustados entre os picos e suas caraterísticas falésias. A `r figr("topography", TRUE, type="Fig.")`representa a topografia complexa da ilha da Madeira com isolinhas.
+A ilha da Madeira apresenta uma topografia muito montanhosa, com profundos vales incrustados entre os picos e suas caraterísticas falésias. A ilha do Porto Santo, apresenta uma topografia muito menos complexa em comparação à ilha da Madeira. A `r figr("topography", TRUE, type="Fig.")`representa a topografia complexa da ilha da Madeira com isolinhas.
 
 ```{r topography, echo=FALSE, message=FALSE, fig.cap="Topografia com isolinhas de Altura [m].", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
 
@@ -247,7 +255,7 @@ Face à utilização do modelo Simplified Solis, que faz uso de valores AOD para
 
 Para definição digital da topografia, foram utilizados dados dos modelos digitais de elevação provenientes do projeto SRTM. A resolução final da grelha de altimetria a utilizar nos cálculos foi de 100 m, resultando nas `r figr("srtm_topo_mad", TRUE, type="Fig.")` e `r figr("srtm_topo_ps", TRUE, type="Fig.")`.
 
-```{r srtm_topo_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 100m de resolução da Ilha da Madeira.", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
+```{r srtm_topo_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 100m de resolução da ilha da Madeira.", anchor = "Figura", fig.retina=1, dpi=500, fig.width=13, fig.height=9, dev="png", dev.args=list(antialias = "none")}
 
 hgt[hgt == 0] <- NA
 
@@ -263,7 +271,7 @@ filled.contour(long, lat, t(hgt),  col = terrain.colors(20), asp = 1, # nlevels 
 
 ```
 
-```{r srtm_topo_ps, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 100m de resolução da Ilha do Porto Santo.", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
+```{r srtm_topo_ps, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 100m de resolução da ilha do Porto Santo.", anchor = "Figura", fig.retina=1, dpi=500, fig.width=13, fig.height=9, dev="png", dev.args=list(antialias = "none")}
 
 hgt_ps[hgt_ps == 0] <- NA
 
@@ -280,12 +288,14 @@ filled.contour(long_ps, lat_ps, t(hgt_ps), col = terrain.colors(31), asp = 1, # 
 ```
 
 A descrição direcional das elevações em graus, horizontes, foi realizada segundo o método proposto por Dozier et al.1980 e teve por base a informação de altimétrica na resolução de 100m. Na estimativa dos horizontes foram utilizados 96 sectores direcionais permitindo estimar os efeitos de sombreamento e consequente influência sobre o défice de energia.
-Na `r figr("hori_ps_N", TRUE, type="Fig.")` pode ser consultado com maior detalhe a informação topográfica de entrada, e o mapa de horizontes para a direção de 0º (Norte) e 90º (Este).
+Na `r figr("hori_ps_N", TRUE, type="Fig.")` pode ser consultado com maior detalhe a informação topográfica de entrada, e o mapa de horizontes para a direção de 90º (Sul) para a ilha da Madeira e Porto Santo.
 
-```{r hori_ps_N, echo=FALSE, message=FALSE, fig.cap="Cálculo dos horizontes, direção de Norte e Este no Porto Santo.", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9, fig.show='hold'}
+```{r hori_ps_N, echo=FALSE, message=FALSE, fig.cap="Cálculo dos horizontes, direção de Norte e Este no Porto Santo.", anchor = "Figura", fig.retina=1, dpi=500, fig.width=13, fig.height=9, fig.show='hold', dev="png", dev.args=list(antialias = "none")}
 
 hor_file_ps <- h5file("ReSun/horiz/PTS_100x100/hor_mapcal_96.mat")
 hor_mat_ps <- hor_file_ps["matrixtotalf"][]
+hor_file_mad <- h5file("ReSun/horiz/MAD_100x100/hor_mapcal_96.mat")
+hor_mat_mad <- hor_file_mad["matrixtotalf"][]
 
 #library(plotly)
 #plot_ly(z = t(hor_mat_ps[4,,]), type = "contour", width = "100%", height = "100%")
@@ -294,23 +304,23 @@ hor_mat_ps <- hor_file_ps["matrixtotalf"][]
 #hor_mat[hor_mat == 0] <- NA
 #image.plot(hor_mat_ps[4,,], col = viridis(n = 21, alpha = 1, begin = 0, end = 1, option = "D"), axes=T, legend.lab="[m/s]") #,  xlab='Longitude [°]', ylab='Latitude [°]'
 
-filled.contour(hor_mat_ps[4,,], col = viridis(n = 20, alpha = 1, begin = 0, end = 1, option = "A"), # nlevels = 400, #axes = F #(12), nlev=13,
+filled.contour(hor_mat_mad[51,,], col = viridis(n = 27, alpha = 1, begin = 0, end = 1, option = "A"), # nlevels = 400, #axes = F #(12), nlev=13,
                plot.axes = {
                  axis(1); 
                  axis(2); 
                  grid(NULL,NULL,lty = 5, lwd = 0.5)
                  },
                key.title = title(main = as.expression(paste("[º]"))),
-               plot.title = title(main = "Horizontes - Este"))
+               plot.title = title(main = "Horizontes ilha da Madeira - Sul"))
 
-filled.contour(hor_mat_ps[27,,], col = viridis(n = 20, alpha = 1, begin = 0, end = 1, option = "A"), # nlevels = 400, #axes = F #(12), nlev=13,
+filled.contour(hor_mat_ps[51,,], col = viridis(n = 27, alpha = 1, begin = 0, end = 1, option = "A"), # nlevels = 400, #axes = F #(12), nlev=13,
                plot.axes = {
                  axis(1); 
                  axis(2); 
                  grid(NULL,NULL,lty = 5, lwd = 0.5);
                  },
                key.title = title(main = as.expression(paste("[º]"))),
-               plot.title = title(main = "Horizontes - Norte"))
+               plot.title = title(main = "Horizontes ilha do Porto Santo - Sul"))
 
 ```
 
@@ -360,15 +370,26 @@ corr_values_ggplot <- data.frame()
 
 corr_values <- corr_values[c(1:11), c(1, 4, 8, 9)] 
 
+
+# adicionar valores da simulacao ReSun_D03 e corrigidos para os pontos das estaçoes para comparaçao
+corr_values$ReSun_D03 <- c(179.3193, 213.8, 155.7298, 204.6529, 203.0712, 167.71, 202.2721, 164.1528, 192.5755, NA, NA)
 corr_values$ecorr <- corr_values[10, 4]*corr_values[, 4] + corr_values[11, 4]
 #corr_values$corr <- corr_values$ecorr
 corr_values[c(10:11), c(5)] <- NA
+corr_values$ReSun_D03_corr <- corr_values$ReSun_D03*(1-corr_values$ecorr/100)
+
+# calcular erro absoluto e percentil
+corr_values$ecorrperc <- abs((corr_values$ReSun_D03_corr - corr_values$IGH)/corr_values$IGH*100)
+corr_values$per50 <- quantile(corr_values$ecorrperc[1:9], probs = .5)
+corr_values$per80 <- quantile(corr_values$ecorrperc[1:9], probs = .8)
+corr_values$RMS <- sqrt(mean(corr_values$ecorrperc[1:9]^2))
+corr_values$SD <- sd(corr_values$ecorrperc[1:9], na.rm = FALSE)
 
 corr_values[c(1:9), -1] <- round(corr_values[c(1:9), -1], digits = 1)
 corr_values_ggplot <- corr_values
-colnames(corr_values) <- c("EMA", " Erro abs. [%]", "Rad. Sol. [W/m^2]", "Altura [m]", " Erro abs. corrigido [%]")
+colnames(corr_values) <- c("EMA", "Erro abs. [W/m^2]", "Rad. Sol. [W/m^2]", "Altura [m]",  "ReSun D03 [W/m^2]", " Erro abs. corr. [W/m^2]", "ReSun D03 corr. [W/m^2]", "Erro abs. [%]", "Per50", "Per80", "RMS", "SD")
 
-kable(corr_values[1:9,], caption = 'Valores de Erro Absoluto, rMB[%], para as EMAS em estudo.', align = "c", digits = 3)
+kable(corr_values[1:9,1:8], caption = 'Valores de Erro Absoluto, rMB[%], para as EMAS em estudo.', align = "c", digits = 3)
 
 ```
 
@@ -398,13 +419,16 @@ A `r figr("IGPH_mad", TRUE, type="Fig.")`, `r figr("IGPH_ps", TRUE, type="Fig.")
 
 
 \blandscape
-```{r IGPH_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Radiação Global no plano horizontal para a ilha da Madeira, par o TMY.", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
+```{r IGPH_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Radiação Global no plano horizontal para a ilha da Madeira, par o TMY.", anchor = "Figura", fig.retina=1, dpi=500, fig.width=13, fig.height=9, dev="png", dev.args=list(antialias = "none")}
 
 # croped use z matrix:
 # mat_rot(matrix(raster_IGPH[], ncol = raster_IGPH@ncols, nrow = raster_IGPH@nrows, byrow = T))
 # non croped use z matrix:
 # t(IGPH[,,1])
-filled.contour(long, lat, mat_rot(matrix(raster_IGPH[], ncol = raster_IGPH@ncols, nrow = raster_IGPH@nrows, byrow = T)), col = viridis(n = 17, alpha = 1, begin = 0, end = 1, option = "A"), asp = 1, xlim = range(long, finite = TRUE), ylim = range(lat, finite = TRUE), # nlevels = 400, #axes = F #(12), nlev=13,
+
+filled.contour(long, lat, mat_rot(matrix(raster_IGPH[], ncol = raster_IGPH@ncols, nrow = raster_IGPH@nrows, byrow = T)), 
+               color = rgb.palette.rad, levels = seq(floor(min(raster_IGPH$IGPH_tot[], na.rm = T)), round(max(raster_IGPH$IGPH_tot[], na.rm = T)+10, -1), 10), #viridis(n = 17, alpha = 1, begin = 0, end = 1, option = "A"), 
+               asp = 1, xlim = range(long, finite = TRUE), ylim = range(lat, finite = TRUE), # nlevels = 400, #axes = F #(12), nlev=13,
                plot.axes = {
                  axis(1); 
                  axis(2); 
@@ -419,9 +443,11 @@ filled.contour(long, lat, mat_rot(matrix(raster_IGPH[], ncol = raster_IGPH@ncols
 
 
 \blandscape
-```{r IGPH_ps, warning=F, echo=FALSE, message=FALSE, fig.cap="Radiação Global no plano horizontal ilha do Porto Santo, par o TMY.", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
+```{r IGPH_ps, warning=F, echo=FALSE, message=FALSE, fig.cap="Radiação Global no plano horizontal ilha do Porto Santo, par o TMY.", anchor = "Figura", fig.retina=1, dpi=500, fig.width=13, fig.height=9, dev="png", dev.args=list(antialias = "none")}
 
-filled.contour(long_ps, lat_ps, mat_rot(matrix(raster_IGPH_merg[], ncol = raster_IGPH_merg@ncols, nrow = raster_IGPH_merg@nrows, byrow = T)), col = viridis(n = 17, alpha = 1, begin = 0, end = 1, option = "A"), asp = 1, xlim = range(long_ps, finite = TRUE), ylim = range(lat_ps, finite = TRUE), # nlevels = 400, #axes = F #(12), nlev=13,
+filled.contour(long_ps, lat_ps, mat_rot(matrix(raster_IGPH_merg[], ncol = raster_IGPH_merg@ncols, nrow = raster_IGPH_merg@nrows, byrow = T)), 
+               color = rgb.palette.rad, levels = seq(floor(min(raster_IGPH$IGPH_tot[], na.rm = T)), round(max(raster_IGPH$IGPH_tot[], na.rm = T)+10, -1), 10), #viridis(n = 17, alpha = 1, begin = 0, end = 1, option = "A"), 
+               asp = 1, xlim = range(long_ps, finite = TRUE), ylim = range(lat_ps, finite = TRUE), # nlevels = 400, #axes = F #(12), nlev=13,
                plot.axes = {
                  axis(1); 
                  axis(2); 
@@ -441,12 +467,26 @@ filled.contour(long_ps, lat_ps, mat_rot(matrix(raster_IGPH_merg[], ncol = raster
 
 A incerteza associada aos resultados da modelação da radiação solar é sempre um processo complexo e dependente de inúmeras fontes que contribuem para a sua estimativa, sempre aproximada. Destaca-se que os principais controladores que afetam a modelação da radiação solar são essencialmente a nebulosidade e o estado de pureza da atmosfera. Para uma se proceder a uma validação do desempenho do modelo é necessária a existência de dados fidedignos e distribuídos ao longo de diferentes condições atmosféricas, o que na maior parte das vezes não acontece face a escassez de medições.
 A ilha da Madeira embora apresente uma área relativamente pequena, esta é composta por uma topografia muito acidentada, que faz com que hajam microclimas e sazonalidade climática, estes casos tornam imperativo o uso de abordagens científicas mais sofisticadas para qualquer modelação energética que exija dados solares como entrada.
-Nas tabelas 3 e 4 são apresentadas as medidas estatísticas de erro médio relativo, rMB, Root Mean Square relativo, rRMS, desvio padrão relativo, rSTD, e o erro relativo absoluto máximo para diferentes cenários de probabilidade (50%, 80% e 90%), respetivamente.
+Na tabela `r figr("percentile_tab", TRUE, type="Tab.")` é apresentado as medidas estatísticas de erro médio relativo, rMB, Root Mean Square relativo, rRMS, desvio padrão relativo, rSTD, e o erro relativo absoluto máximo para diferentes cenários de probabilidade (50% e 80%), respetivamente.
+
+```{r percentile_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
+
+tab <- corr_values[1,9:10]
+row.names(tab) <- "Erro relativo absoluto máximo [%]"
+colnames(tab) <- c("Probabilidade 50%", "Probabilidade 80%")
+
+kable(tab, caption = 'Erro relativo absoluto máximo para diferentes cenários de probabilidade da validação ReSun.', align = "c", digits = 3)
+
+```
 
 
 # Considerações
 
 ***
+
+Foram realizadas simulações computacionais a fim de se modelar por técnicas mais avançadas a disponibilidade da radiação solar global na horizontal sobre a áera da ilha da Madeira e Porto Santo.
+As técnicas de modelação da radiação solar foram executadas pelo ReSun^TM^, fazendo uso de resultados de mesoescala com objetivo de integrar os efeitos da nebulosidade. Este é um processo em que o ReSun^TM^ faz uso das capacidades de modelação meteorológicas de larga escala, resolvidas pela mesoescala (WRF), para alimentar um processo de downscaling dinâmico que introduz um maior detalhe na caracterização da disponibilidade e magnitude da radiação solar.
+Para caracterização da incerteza foram associados os resultados das 9 EMAS anteriormente apresentadas.
 
 
 ```{r, echo=FALSE}
