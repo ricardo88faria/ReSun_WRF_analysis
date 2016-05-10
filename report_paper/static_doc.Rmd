@@ -3,19 +3,19 @@ title: "Atlas da Radiação Solar da ilha da Madeira"
 author: "Ricardo Jorge Agrela Faria"
 date: '`r format(Sys.Date())`'
 output:
+  pdf_document:
+    fig_caption: yes
+    keep_tex: yes
+    number_sections: yes
+  md_document:
+    toc: yes
+    toc_depth: 2
+    variant: markdown
   html_document:
     fig_caption: yes
     theme: spacelab
     toc: yes
     toc_depth: 2
-  md_document:
-    toc: yes
-    toc_depth: 2
-    variant: markdown
-  pdf_document:
-    fig_caption: yes
-    keep_tex: yes
-    number_sections: yes
   word_document: default
 graphics: yes
 header-includes:
@@ -198,7 +198,7 @@ Para efeitos de simulação o ReSun^TM^ assume valores de cadência diária de A
 Em termos gerais, a previsão da performance a longo prazo de qualquer sistema energético solar depende da existência de uma extensa e fiável base climática local. Teoricamente, esta análise energética deve ser realizada usando-se vários anos de dados climáticos, o que na maior parte das vezes não é possível dada a sua inexistência. Isto leva-nos a ter de recorrer a informação proveniente de bases climáticas de larga escala obtidas através de modelos de simulação avançados. Contudo, o uso de períodos extensões para simulação são computacionalmente exigentes, tornando as análises demasiado morosas e dispendiosas. A variabilidade inter anual das condições climáticas motiva a necessidade de se derivar uma base que represente as condições médias de longo prazo num único ano. Comummente isto é conseguido através de um ano meteorológico típico (Typical Meterological Year, TMY) constituído pela informação dos 12 meses mais representativos.
 O método estatístico utilizado para estimativa do TMY foi o de Filkenstein – Shafer (FS) devidamente implementado pela [Megajoule Inovação](<http://megajoule.pt>) [@finkelstein1971]. O método baseia a seleção dos meses através de uma análise da frequência cumulativa da média diária dos valores de Radiação Global e Temperatura para cada um dos meses de um ano civil, Janeiro a Dezembro. De uma forma resumida, a escolha do ano para cada um dos meses resultará do que apresentar o menor somatório de erros diários de frequências cumulativas de um mês em especifico, de um dado ano, face ao longo termo do mês. De salientar que os erros obtidos para cada uma das variáveis incluídas na análise do TMY são sujeitas a uma ponderação utilizando-se pesos diferentes, 70% e 30%, radiação solar global e temperatura, respetivamente.
 Para obtenção de um TMY que caracterize de uma forma fiável a distribuição da radiação global de longo prazo e que reflita a variabilidade climática na área de interesse, recorreu-se a dados horários de radiação solar global e temperatura provenientes da Reanálise MERRA da NASA. Foram extraídos 30 pontos nativos da malha MERRA, distribuídos ao longo da área de interesse, para os últimos 10 anos (2005 – 2015) para apoio à seleção de 12 meses típicos que compõem o TMY.
-Após extração da informação para os 30 pontos, foi realizada uma integração da informação de cada ponto para um único ficheiro de forma a permitir a análise estatística para a área de interesse. A `r figr("tmy_tab", TRUE, type="Tab.")` apresenta a informação relativa anos obtidos para cada um dos meses do TMY e o valor médio do erro absoluto ponderado (Radiação e Temperatura) face ao longo termo.
+Após extração da informação para os 30 pontos, foi realizada uma integração da informação de cada ponto para um único ficheiro de forma a permitir a análise estatística para a área de interesse. A `r figr("cob_tab", TRUE, type="Tab.")` `r figr("tmy_tab", TRUE, type="Tab.")` apresenta a informação relativa à cobertura obtida de cada estação para cada um dos meses do TMY e o valor médio do erro absoluto ponderado (Radiação e Temperatura) face ao longo termo.
 
 ```{r cob_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
 
