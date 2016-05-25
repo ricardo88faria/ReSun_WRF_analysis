@@ -88,15 +88,15 @@ land <- readShapeSpatial("../input/map/PRT_adm2.shp", proj4string = proj)
 
 ***
 
-A realização do estudo do Atlas da Radiação Solar da ilha da Madeira, teve iniciativa no estágio do Eng. Ricardo Faria no [LREC](<http://www.lrec.pt>). Este novo Atlas foi realizada com novos modelos matemáticos, [WRF](<http://www.wrf-model.org>) para modelação do clima e o ReSun^TM^ para modelar a distribuição do recurso solar, em plano horizontal, de modo a identificar de regiões com maior potencial solar, este último é usado com a colaboração da Empresa [Megajoule Inovação](<http://megajoule.pt>).
+A realização do estudo do Atlas da Radiação Solar da ilha da Madeira, surge inserida no âmbito do estágio Professional do Eng. Ricardo Faria do Laboratório Regional de Engenharia Civil [LREC](<http://www.lrec.pt>). Este novo Atlas foi realizado com recurso ao código de modelação ReSun (Pereira. R., 2013) que faz uso das mais recentes técnicas de modelação numérica do recurso solar. É tambem usado o [WRF](<http://www.wrf-model.org>) para modelação do climática. O código ReSun^TM^ foi desenvolvido e facultado pelo Engº Rui Pereira no ámbito de uma colaboração com a empresa Megajoule Inovação. Foram ainda facultados os programas de apoio a tratamento de dados de radiação global (ReSunQC) e estimativa do Ano Meteorológico Típico (ReSunTMY). As metodologias e técnicas descritas seguem as utilizadas nos trabalhos realizados com o código ReSun na empresa Megajoule Inovação.  [Megajoule Inovação](<http://megajoule.pt>).
 
 
 # Localização e Descrição
 
 ***
 
-A região em estudo é a ilha da Madeira, que é a principal ilha do arquipélago da Madeira, situado no oceano Atlântico, a sudoeste da costa portuguesa. Encontra-se entre as longitudes -17.3º a -16.64º e latitudes 32.6º a 32.9º. O ponto culminante situa-se no Pico Ruivo, 1.862 m de altura, a ilha é composta por um perímetro	179.3 km e área de 742.41  km^2^.
-O [LREC](<http://www.lrec.pt>) dispõe de uma vasta rede de Estações Meteorológicas Automáticas (EMA) distribuidas por toda a ilha, representada na `r figr("ggmap", TRUE, type="Fig.")` e  `r figr("est_tab", TRUE, type="Tab.")`.
+A região em estudo é a ilha da Madeira, que é a principal ilha do arquipélago da Madeira, situado no oceano Atlântico, 1000 km a sudoeste da costa portuguesa. Encontra-se entre as longitudes -17.3º a -16.64º e latitudes 32.6º a 32.9º. O ponto culminante situa-se no Pico Ruivo, 1.862 m de altura, a ilha é composta por um perímetro	179.3 km e área de 742.41  km^2^.
+O [LREC](<http://www.lrec.pt>) dispõe de uma vasta rede de Estações Meteorológicas Automáticas (EMA) distribuídas por toda a ilha, representada na `r figr("ggmap", TRUE, type="Fig.")` e  `r figr("est_tab", TRUE, type="Tab.")`.
 
 ```{r, echo=FALSE} 
 #\ref{fig:ggmap}
@@ -140,9 +140,9 @@ Devido à sua latitude, a ilha da Madeira apresenta todas as características de
 
 ## Topografia
 
-A ilha da Madeira apresenta uma topografia muito montanhosa, com profundos vales incrustados entre os picos e suas caraterísticas falésias. A ilha do Porto Santo, apresenta uma topografia muito menos complexa em comparação à ilha da Madeira. A `r figr("topography", TRUE, type="Fig.")`representa a topografia complexa da ilha da Madeira com isolinhas.
+A ilha da Madeira apresenta uma topografia extremamente complexa, com profundos vales incrustados entre os picos e várias falésias junto à costa. A ilha do Porto Santo, apresenta uma topografia pouco complexa com predominância de suaves ondulações de terreno. A `r figr("topography", TRUE, type="Fig.")` apresenta a topografia complexa da ilha da Madeira com isolinhas equidistantes de 85 m.
 
-```{r topography, echo=FALSE, message=FALSE, fig.cap="Topografia com isolinhas de Altura [m].", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
+```{r topography, echo=FALSE, message=FALSE, fig.cap="Topografia com isolinhas equidistantes de 85 [m].", anchor = "Figura", fig.retina=1, dpi=100, fig.width=13, fig.height=9}
 
 contour(long, lat, t(hgt), asp =1.1, col = terrain.colors(21), lwd=0.4, labcex=0.5, levels = c(.1, seq(min(hgt), max(hgt), length.out = 21)), xlab = 'Longitude [°]', ylab = 'Latitude [°]')
 grid(NULL,NULL,lty = 5, lwd = 0.5)
@@ -150,14 +150,14 @@ grid(NULL,NULL,lty = 5, lwd = 0.5)
 ```
 
 
-# Recurso da Energia Solar
+# Recurso Solar
 
 ***
 
-A radiação solar incidente na superfície terrestre resulta de uma complexa interacção entre atmosfera e a superfície. Numa escala mais global, fazem-se notar os gradientes da latitude causados pela geometria da terra e pelo seu movimento relativo ao sol (translação e rotação). Numa escala regional e até local, a morfologia do terreno é o maior factor de modificação da distribuição da radiação solar, variando em resposta à elevação, inclinação da superfície, orientação e sombreamento. A atenuação atmosférica, efeitos de dispersão e absorção pelos gases, partículas sólidas e líquidas, bem como a nebulosidade, agem como factores depreciativos dos valores de radiação.
-A radiação que chega à superfície terrestre é selectivamente atenuada pela atmosfera, sendo a radiação directa a componente que não é reflectida nem dispersa. A radiação que é dispersa origina a radiação difusa e, por fim, uma pequena parte é reflectida (apenas em superfícies inclinadas) causando a radiação reflectida. Estas três componentes da radiação juntas, dão origem à radiação global ou onda curta.
-Dada a atenuação da radiação, a quantidade de energia que actualmente chega à Terra, habitualmente, não excede os 70 % daquela que se encontra fora da nossa atmosfera, designada de extraterrestrial. Comummente as regiões de baixa latitude e especialmente com climas secos, expressam, tipicamente, os índices de radiação médios mais altos.
-Dependendo da tecnologia empregue para transformação da energia solar, poderemos ter uma transformação de todas as componentes da radiação ou de apenas uma. A insolação (irradiação ou radiação) recebida por um painel solar apreende todas as componentes, todavia, os sistemas de transformação que empregam concentração óptica (exemplo dos concentradores parabólicos), apenas podem usar a radiação directa normal para transformação.
+A radiação solar incidente na superfície terrestre resulta de uma complexa interação entre atmosfera e a superfície. Numa escala mais global, fazem-se notar os gradientes da latitude causados pela geometria da terra e pelo seu movimento relativo ao sol (translação e rotação). Numa escala regional e até local, a morfologia do terreno é o maior fator de modificação da distribuição da radiação solar, variando em resposta à elevação, inclinação da superfície, orientação e sombreamento. A atenuação atmosférica, efeitos de dispersão e absorção pelos gases, partículas sólidas e líquidas, bem como a nebulosidade, agem como fatores depreciativos dos valores de radiação.
+A radiação que chega à superfície terrestre é seletivamente atenuada pela atmosfera, sendo a radiação direta a componente que não é refletida nem dispersa. A radiação que é dispersa origina a radiação difusa e, por fim, uma pequena parte é refletida (apenas em superfícies inclinadas) causando a radiação refletida. Estas três componentes da radiação juntas, dão origem à radiação global ou onda curta.
+Dada a atenuação da radiação, a quantidade de energia que atualmente chega à Terra, habitualmente, não excede os 70 % daquela que se encontra fora da nossa atmosfera, designada de extraterrestrial. Comummente as regiões de baixa latitude e especialmente com climas secos, expressam, tipicamente, os índices de radiação médios mais altos.
+Dependendo da tecnologia empregue para transformação da energia solar, poderemos ter uma transformação de todas as componentes da radiação ou de apenas uma. A insolação (irradiação ou radiação) recebida por um painel solar apreende todas as componentes, todavia, os sistemas de transformação que empregam concentração ótica (exemplo dos concentradores parabólicos), apenas podem usar a radiação direta normal para transformação.
 O recurso solar num dado local é caracterizado pela radiação ou irradiação solar por unidade de área, geralmente expressa em quilowatt-hora ou megajoule por metro quadrado por dia ou por ano.
 
 
@@ -165,32 +165,25 @@ O recurso solar num dado local é caracterizado pela radiação ou irradiação 
 
 ***
 
-Metodologia a usar na elaboração do novo Atlas Solar do Arquipélago da Madeira:
-A estimativa do recurso solar será executada pelo código de simulação ReSun^TM^ (Pereira et al 2013) na sua variante de modelação, que se encontra capacitada para modelar os principais factores que afectam a magnitude do recurso solar, permitindo assim apurar a verdadeira valia da distribuição do recurso solar de uma forma mais detalhada. A modelação ReSun^TM^ faz uso de resultados das simulações meteorológicas WRF (Weather Research & Forecasting Model), num procedimento designado de downscaling, que engloba simulações idealizadas (céu limpo) nos pontos de uma malha de cálculo (mapeamento) ou pontos discretos de interesse (séries dados). São usadas técnicas de decomposição da radiação e métodos de interpolação por recurso a distância efetivas.
-As simulações a usar na obtenção do Atlas Solar serão realizadas para um período temporal equivalente a um ano meteorológico típico, selecionado a partir das Estações Meteorológicas Automáticas distribuídas pelo arquipélago da Madeira e com auxilio, se necessário, de dados provenientes de uma análise retrospetiva do programa MERRA (Modern-Era Retrospective Analysis For Research And Applications). Os dados das estações serão processados e analisados com o módulo QC (Solar Data Quality Check) do ReSun^TM^, onde se fará uma análise de consistência das medições de radiação global das estações. Será também realizada uma averiguação da performance do ReSun^TM^ para um ano a selecionar a partir das medições locais.
+A estimativa do recurso solar foi executada pelo código de simulação ReSun^TM^ (Pereira, R., 2013) que se encontra capacitado para modelar os principais fatores que afetam a magnitude do recurso solar, permitindo apurar a verdadeira valia da distribuição do recurso solar de uma forma mais realista e detalhada. A modelação ReSun faz uso de resultados de simulações meteorológicas [WRF](<http://www.wrf-model.org>) (Weather Research & Forecasting Model), num procedimento por recurso a um processo downscaling dinâmico, onde são usadas técnicas de decomposição da radiação e métodos de interpolação de várias quantidades por recurso a distância efetivas. As simulações a usar na obtenção do Atlas Solar foram realizadas para um período temporal equivalente a um ano meteorológico típico, selecionado a partir das Estações Meteorológicas Automáticas distribuídas pelo arquipélago da Madeira. Os dados das estações foram processados e analisados com o módulo ReSun QC (Solar Data Quality Check), para uma análise da consistência dos registos horários medidos de radiação global. Será também realizada uma averiguação da performance do ReSun para um ano a selecionar a partir das medições locais.
+
 
 
 ## Simulações Mesoescala
 
 O uso de resultados de mesoescala para alimentar o modelo ReSunTM tem como objetivo integrar os efeitos de atenuação da radiação solar provocada pela formação de nebulosidade.
-O modelo de mesoescala utilizado foi o WRF (Weather Research and Forecasting System, UCAR) versão 3.3.5.
-Este modelo de mesoescala é atualmente utilizado por inúmeras instituições por todo o mundo, e a sua versatilidade garante uma personalização completa para uma vasta gama de estudos. Este sistema de modelação numérica consiste em vários módulos especialmente criados para assimilar dados de observações e simular condições atmosféricas, resolvendo várias equações que descrevem a dinâmica e termodinâmica dos processos climáticos em áreas limitadas [@skamarock2005];[@lo2007].
-Os dados climáticos de entrada utilizados para alimentar as condições de fronteira do modelo WRF foram os NCEP FNL (Final) Operation Global Analysis [@gfs2003]. Este projeto, concebido pelo Global Data Assimilation System (GDAS), reúne dados de observações globais do programa Global Telecommunications System (GTS), e de outras fontes observacionais como, tradicionais mastros meteorológicos, boias, satélites entre outros. Os dados FNL são concebidos com o mesmo modelo com o qual o National Center for Environment Prediction (NCEP) opera, o Global Forecast System (GFS). Estes dados descrevem a atmosfera em vários níveis verticais, com uma resolução horizontal de 1o (~110km), sendo utilizados em estudos de larga escala e para inicialização de simulações de menor escala.
-Os dados das fronteiras físicas são oriundos do SRTM30 DEM (United States Geological Survey), na versão 2.0. Esta base de dados consiste num modelo de elevação digital (DEM – Digital Elevation Model) que fornece informação sobre a elevação do terreno num domínio horizontal de 30 arco segundos (aproximadamente 1 km), obtida através de interferometria por radar, com cobertura de 80% da massa terrestre [@farr2000].
-Os dados sobre a cobertura do solo são oriundos do Global Land Cover Characteristics Database (USGS, National Center for Earth Resources Observation and Science – EROS, Joint Research Centre of the European Commission). Tais dados consistem numa série de informações globais sobre as características de cobertura do solo com resolução horizontal de 1 km, concebidos para utilização numa ampla gama de aplicações de investigação ambiental e modelação, adquiridos de observações globais realizadas entre Abril de 1992 e Março de 1993 do Advanced High Resolution Radiometer, a bordo dos satélites da série NOAA [@sellers1996];[@skamarock2005];[@gemmill2007].
-Dados de Temperatura da Superfície do Mar (SST – Sea Surface Temperature) são extraídos do Daily Real-Time, Global Sea Surface Temperature Analysis (RTG-SST), disponibilizado pelo National Centers for Environment Prediction (NCEP), National Weather Service (NWS/NOAA). Esta base de dados consiste numa combinação diária de dados in-situ e medições do Advanced Very High Resolution Radiometer (AVHRR) SST analysis, numa grelha de 0.5 graus de resolução [10].
-As configurações e parametrizações do modelo de mesoescala seguem conclusões retiradas aquando do desenvolvimento do acoplamento WRF/ReSunTM [@pereira2013].
+O modelo de simulação meteorológica [WRF](<http://www.wrf-model.org>) foi utilizado na sua versão 3.5.1.
+Este modelo de simulação meteorológica é atualmente utilizado por inúmeras instituições por todo o mundo, e a sua versatilidade garante uma personalização completa para uma vasta gama de estudos. Este sistema de modelação numérica consiste em vários módulos especialmente criados para assimilar dados de observações e simular condições atmosféricas, resolvendo várias equações que descrevem a dinâmica e termodinâmica dos processos climáticos em áreas limitadas [@skamarock2005];[@lo2007].
+Os dados climáticos de entrada utilizados para alimentar as condições de fronteira do modelo WRF foram os NCEP FNL (Final) Operation Global Analysis [@gfs2003]. Este projeto, concebido pelo Global Data Assimilation System (GDAS), reúne dados de observações globais do programa Global Telecommunications System (GTS), e de outras fontes observacionais como, tradicionais mastros meteorológicos, boias, satélites entre outros. Os dados FNL são concebidos com o mesmo modelo com o qual o National Center for Environment Prediction (NCEP) opera, o Global Forecast System (GFS). Estes dados descrevem a atmosfera em vários níveis verticais, com uma resolução horizontal de 1º (~110km), sendo utilizados em estudos de larga escala e para inicialização de simulações de menor escala.
+Os dados das fronteiras físicas são oriundos do SRTM30 DEM (United States Geological Survey), na versão 2.0. Esta base de dados consiste num modelo de elevação digital (DEM – Digital Elevation Model) que fornece informação sobre a elevação do terreno num domínio horizontal de 3 arco segundos (aproximadamente 90 m), obtida através de interferometria por radar, com cobertura de 80% da massa terrestre [@farr2000].
+Os dados sobre a cobertura do solo são oriundos do programa Corine Land Cover 2006(USGS, National Center for Earth Resources Observation and Science – EROS, Joint Research Centre of the European Commission). Tais dados consistem numa série de informações globais sobre as características de cobertura do solo com resolução horizontal de 1 km, concebidos para utilização numa ampla gama de aplicações de investigação ambiental e modelação, adquiridos de observações globais realizadas entre Abril de 1992 e Março de 1993 do Advanced High Resolution Radiometer, a bordo dos satélites da série NOAA, cuja a integração segue o proposto por [@sellers1996];[@skamarock2005];[@gemmill2007].
+Dados de Temperatura da Superfície do Mar (SST – Sea Surface Temperature) são extraídos do Daily Real-Time, Global Sea Surface Temperature Analysis (RTG-SST), disponibilizado pelo National Centers for Environment Prediction (NCEP), National Weather Service (NWS/NOAA). Esta base de dados consiste numa combinação diária de dados in-situ e medições do Advanced Very High Resolution Radiometer (AVHRR) SST analysis, numa grelha de 0.5 graus de resolução [@sellers1996].
+As configurações e parametrizações do modelo de mesoescala seguem conclusões retiradas aquando do desenvolvimento do acoplamento WRF/ReSun^TM^ [@pereira2013].
 
 
 ## Descrição do modelo ReSun
 
-O modelo ReSun^TM^, _Solar Modelling on Coupling Techinques with Mesoscale Simulations_, Pereira et al 2013, tem sido desenvolvido e testado desde 2009 na MEGAJOULE INOVAÇÃO e conta também com a colaboração do departamento de Física da Universidade de Aveiro. O ReSun^TM^ usa resultados das simulações do modelo WRF, para correção das simulações idealizadas (céu limpo) nos pontos da malha ReSun^TM^. São usadas técnicas de decomposição da radiação e métodos de interpolação, por recurso a distância efetivas, para o transporte das quantidade de correção para os pontos da malha de cálculo do Re.SunTM.
-Os factores de correção da simulação de céu limpo da malha do ReSun^TM^ podem ser estimados através de duas formas, em termos de índice solar global (Radiação Global WRF/Radiação Global Céu Limpo) ou índice solar directo (Radiação Direta WRF / Radiação Direta Céu Limpo) e difuso (Radiação Global WRF / Radiação Difusa Céu Limpo).
-As técnicas de decomposição da radiação global para obtenção da radiação direta e difusa, é conseguida através da utilização do modelo DirInt (Perez R., Ineichen P., Maxwell E., Seals R., Zelenka A. , 1992) ou BRL ( Boland et al. 2012).
-Os efeitos do terreno estão programados para serem contabilizados através do método proposto por Dozier et al. (1980). O ReSun^TM^ integra dois modelos de simulação em condições de céu limpo, o modelo ESRA (European Solar Radiation Atlas) proposto por Rigollier et al. (2000) e o modelo Simplified SOLIS proposto por Ineichen (2008). O modelo ESRA permite duas formulações para a estimativa da radiação solar em condições de céu limpo: irradiância (W/m^2) e irradiação (Wh/m^2.dia). O modelo SOLIS simplificado calcula a irradiância em céu limpo com base em cálculos de transferência radiativa e na relação de Lambert – Beer.
-O modelo ReSun^TM^ apresenta a capacidade de integrar informação atual do estado da pureza da atmosfera a ser ingerida pelo modelo de céu limpo. Os aerossóis ou o TL2 (Linke Turbidity para uma massa de ar igual a 2) são parâmetros de caracterização do estado de pureza e podem ser obtidos a partir do programa SODA (Solar Radiation Data), ou derivados a partir da MACC Re-analysis (Monitoring Atmospheric Composition & Climate) projeto da ECMWF (European Centre for Medium Range Weather Forecast). O projeto SODA possui valores mensais de TL2 disponíveis para o mundo todo, resultante de um levantamento de diferentes fontes de informação, Redmund et al. , 2003. O projeto MACC Re-Analysis não possui informações de TL2 para uso directo, contudo podem ser derivadas utilizando informação do profundidade óptica dos aerossóis para diferentes comprimentos de onda e conjugando dados de coluna de água precipitável. No ReSun^TM^ a estimativa de TL2 usando informação da MACC é possível através de uma de duas formulações de cálculo: Redmund et al. 2003 ou Pierre Ineichen 2008 que considera um ajuste multivariável calculado a partir da irradiação directa estimada com o modelo Solis em conjunto com a fórmula pyrheliometric de Kasten (1996).
-Dependendo do modelo do céu limpo utilizado existem diferentes informações para caracterizar a pureza atmosfera. No caso do modelo de ESRA as equações fazem uso da informação de TL2. A versão simplificada do modelo de Solis (Ineichen, 2008), utiliza como entrada a informação da profundidade óptica dos aerossóis (Aerosol Optical Depth, AOD) para um comprimento de onda de 700 nm (AOD700).
-Para efeitos de simulação o ReSun^TM^ assume valores de cadência diária de AOD ou TL2. Assim sendo temos que os valores mensais de SODA são interpolados linearmente de mensal para diário e os valores médios diários da MACC resultam de uma frequência de amostragem de 3 horas.
+O modelo ReSun^TM^, _Solar Modelling on Coupling Techinques with Mesoscale Simulations_, Pereira R., 2013, tem sido desenvolvido e testado desde 2009 na MEGAJOULE INOVAÇÃO. O ReSunTM usa resultados das simulações do modelo WRF, para correção das simulações idealizadas (céu limpo) nos pontos da malha ReSun. São usadas técnicas de decomposição da radiação e métodos de interpolação, por recurso a distância efetivas, para o transporte das quantidades de correção para os pontos da malha de cálculo do ReSun. Os fatores de correção da simulação de céu limpo da malha do ReSun podem ser estimados através de duas formas, em termos de índice solar global (Radiação Global WRF/Radiação Global Céu Limpo) ou índice solar direto (Radiação Direta WRF / Radiação Direta Céu Limpo) e difuso (Radiação Global WRF / Radiação Difusa Céu Limpo). As técnicas de decomposição da radiação global para obtenção da radiação direta e difusa, é conseguida através da utilização do modelo DirInt (Perez R., Ineichen P., Maxwell E., Seals R., Zelenka A. , 1992) ou BRL ( Boland et al. 2012). Os efeitos do terreno estão programados para serem contabilizados através do método proposto por Dozier et al. (1980). O ReSun integra dois modelos de simulação em condições de céu limpo, o modelo ESRA (European Solar Radiation Atlas) proposto por Rigollier et al. (2000) e o modelo Simplified SOLIS proposto por Ineichen (2008). O modelo ESRA permite duas formulações para a estimativa da radiação solar em condições de céu limpo: irradiância (W/m^2) e irradiação (Wh/m^2.dia). O modelo SOLIS simplificado calcula a irradiância em céu limpo com base em cálculos de transferência radiativa e na relação de Lambert – Beer. O modelo ReSun apresenta a capacidade de integrar informação atual do estado da pureza da atmosfera a ser ingerida pelo modelo de céu limpo. Os aerossóis ou o TL2 (Linke Turbidity para uma massa de ar igual a 2) são parâmetros de caracterização do estado de pureza e podem ser obtidos a partir do programa SODA (Solar Radiation Data), ou derivados a partir da MACC Re-analysis (Monitoring Atmospheric Composition & Climate) projeto da ECMWF (European Centre for Medium Range Weather Forecast). O projeto SODA possui valores mensais de TL2 disponíveis para o mundo todo, resultante de um levantamento de diferentes fontes de informação, Redmund et al. , 2003. O projeto MACC Re-Analysis não possui informações de TL2 para uso direto, contudo podem ser derivadas utilizando informação da profundidade ótica dos aerossóis para diferentes comprimentos de onda e conjugando dados de coluna de água precipitável. No ReSun a estimativa de TL2 usando informação da MACC é possível através de uma de duas formulações de cálculo: Redmund et al. 2003 ou Pierre Ineichen 2008 que considera um ajuste multivariável calculado a partir da irradiação direta estimada com o modelo Solis em conjunto com a fórmula pyrheliometric de Kasten (1996). Dependendo do modelo do céu limpo utilizado existem diferentes informações para caracterizar a pureza atmosfera. No caso do modelo de ESRA as equações fazem uso da informação de TL2. A versão simplificada do modelo de Solis (Ineichen, 2008), utiliza como entrada a informação da profundidade ótica dos aerossóis (Aerosol Optical Depth, AOD) para um comprimento de onda de 700 nm (AOD700). Para efeitos de simulação o ReSun assume valores de cadência diária de AOD ou TL2. Assim sendo temos que os valores mensais de SODA são interpolados linearmente de mensal para diário e os valores médios diários da MACC resultam de uma frequência de amostragem de 3 horas.
 
 
 ### Ano Meteorológico Típico
@@ -245,7 +238,7 @@ Na `r figr("tmy1", TRUE, type="Fig.")`, `r figr("tmy2", TRUE, type="Fig.")`, `r 
 
 ### Profundidade Ótica dos Aerossóis
 
-A profundidade ótica dos aerossóis, mais conhecida por Aerosol Optical Depth, AOD, é conhecida por ser uma variável crítica de entrada em modelos de radiação solar, e determina parcialmente o grau de precisão das estimativas de radiação solar [@gueymard2012]. Em termos globais, a nebulosidade é a principal responsável pela depreciação da magnitude da radiação solar. Todavia, em condições de céu limpo, AOD, torna-se no principal controlador. Nas áreas onde as condições de céu limpo acontecem com maior frequência, torna-se imperativa a sua consideração no espaço e tempo. Além do efeito na estimativa da radiação solar, os aerossóis desempenham um papel determinante na formação de nebulosidade e de modificação das propriedades microfísicas das nuvens. A sua densidade, composição química e tamanho influência o albedo (percentagem de reflecção) e tempo de vida das nuvens, bem como, a taxa e quantidade de precipitação (Abel et al., 2005; Lohmann and Feichter, 2005). Os aerossóis estão intrinsecamente associadas a poeiras transportadas pelas correntes globais de vento, partículas de carbono e sulfatos produzidas por incêndios, tipos de solo, atividades industriais e até mesmo partículas de sais marinhos resultantes da agitação marítima.
+A profundidade ótica dos aerossóis, mais conhecida por Aerosol Optical Depth, AOD, é conhecida por ser uma variável crítica de entrada em modelos de radiação solar, e determina parcialmente o grau de precisão das estimativas de radiação solar [@gueymard2012]. Em termos globais, a nebulosidade é a principal responsável pela depreciação da magnitude da radiação solar. Todavia, em condições de céu limpo, AOD, torna-se no principal controlador. Nas áreas onde as condições de céu limpo acontecem com maior frequência, torna-se imperativa a sua consideração no espaço e tempo. Além do efeito na estimativa da radiação solar, os aerossóis desempenham um papel determinante na formação de nebulosidade e de modificação das propriedades microfísicas das nuvens. A sua densidade, composição química e tamanho influência o albedo (percentagem de refleção) e tempo de vida das nuvens, bem como, a taxa e quantidade de precipitação (Abel et al., 2005; Lohmann and Feichter, 2005). Os aerossóis estão intrinsecamente associados a poeiras transportadas pelas correntes globais de vento, partículas de carbono e sulfatos produzidas por incêndios, tipos de solo, atividades industriais e até mesmo partículas de sais marinhos resultantes da agitação marítima.
 Neste estudo a radiação solar considera informação da Turbidez atmosférica para uma massa de ar igual a 2, TL2, proveniente do programa SODA (Solar Radiation Data), atualizada para cada um dos meses do TMY e posteriormente interpolada para uma frequência diária.
 O projeto SODA contém informação dos valores mensais da TL2, provenientes de uma sobreposição de várias fontes e através de estimativas diretas e indiretas da Turbidez atmosférica para uma massa de ar igual a 2, METEOTEST (Redmund et al ., 2003).
 Face à utilização do modelo Simplified Solis, que faz uso de valores AOD para descrever a pureza da atmosfera, existe a necessidade da conversão de valores de TL2 em valores de AOD para um comprimento de onde de 700nm. A formulação proposta por Ineichen, Pierre, 2008 foi usada para o propósito de conversão.
@@ -255,7 +248,7 @@ Face à utilização do modelo Simplified Solis, que faz uso de valores AOD para
 
 Para definição digital da topografia, foram utilizados dados dos modelos digitais de elevação provenientes do projeto SRTM. A resolução final da grelha de altimetria a utilizar nos cálculos foi de 100 m, resultando nas `r figr("srtm_topo_mad", TRUE, type="Fig.")` e `r figr("srtm_topo_ps", TRUE, type="Fig.")`.
 
-```{r srtm_topo_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 100m de resolução da ilha da Madeira.", anchor = "Figura", fig.retina=1, dpi=500, fig.width=13, fig.height=9, dev="png", dev.args=list(antialias = "none")}
+```{r srtm_topo_mad, warning=F, echo=FALSE, message=FALSE, fig.cap="Topografia SRTM a 90m de resolução da ilha da Madeira.", anchor = "Figura", fig.retina=1, dpi=500, fig.width=13, fig.height=9, dev="png", dev.args=list(antialias = "none")}
 
 hgt[hgt == 0] <- NA
 
@@ -335,7 +328,7 @@ tmy_tab <- data.frame(#Mês = months_name[2:13],
                       Modelo = c("WRF",
                                  "Modelo de Céu Limpo", 
                                  "AOD700nm / Turbidez (Massa de Ar 2)",
-                                 "Modo de Correcção da Radiação de Céu Limpo",
+                                 "Modo de Correção da Radiação de Céu Limpo",
                                  "Modelo de Decomposição",
                                  "Pontos da malha WRF usados em interpolações"
                                  ),
@@ -344,11 +337,11 @@ tmy_tab <- data.frame(#Mês = months_name[2:13],
                                        Informação do terreno SRTM; 
                                        Cobertura do Global Land Cover", 
                                        "Simplified Solis Model",
-                                       "Informação de cadência diária dos Aerossóis para profundidade óptica de 700 nm,
+                                       "Informação de cadência diária dos Aerossóis para profundidade ótica de 700 nm,
                                        derivada a partir da TL2 da base SODA",
                                        "Fração Solar Global",
                                        "Skartveit and Olseth model, 1998",
-                                       "4 (Interpolação tri-linear usando o conceito de distâncias efectivas com métodos de peso segundo Shepard)"))
+                                       "4 (Interpolação tri-linear usando o conceito de distâncias efetivas com métodos de peso segundo Shepard)"))
 colnames(tmy_tab) <- c("", "Configuração")
 #row.names(tmy_tab) <- months_name[2:13]
 
@@ -359,7 +352,7 @@ pander(tmy_tab, caption = 'Configuração ReSun^TM^.', keep.line.breaks = TRUE, 
 
 ## Correção dos Valores de Radiação Global
 
-Considerando que o WRF, demostra uma tendência em sub estimar o valor da radiação com a evolução da altura topográfica, será usado preditores de modo a corrigir/atenuar essa sobrevalorização.
+Considerando que o WRF, demostra uma tendência em subestimar o valor da radiação com a evolução da altura topográfica, será usado preditores de modo a corrigir/atenuar essa sobrevalorização.
 O preditor para corrigir os valores de radiação global, é calculado através de valores de erro absoluto (rMB[%]) de radiação global no plano horizontal simulados no ReSun, nos pontos em que temos valores (EMAS) reais de modo a poder comparar esta evolução. Valores esses que estão apresentados na `r figr("corr_tab", TRUE, type="Tab.")`.
 
 ```{r corr_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
@@ -379,7 +372,10 @@ corr_values[c(10:11), c(5)] <- NA
 corr_values$ReSun_D03_corr <- corr_values$ReSun_D03*(1-corr_values$ecorr/100)
 
 # calcular erro absoluto e percentil
+corr_values$enocorrperc <- abs((corr_values$ReSun_D03 - corr_values$IGH)/corr_values$IGH*100)
 corr_values$ecorrperc <- abs((corr_values$ReSun_D03_corr - corr_values$IGH)/corr_values$IGH*100)
+corr_values$per50_nocorr <- quantile(corr_values$enocorrperc[1:9], probs = .5)
+corr_values$per80_nocorr <- quantile(corr_values$enocorrperc[1:9], probs = .8)
 corr_values$per50 <- quantile(corr_values$ecorrperc[1:9], probs = .5)
 corr_values$per80 <- quantile(corr_values$ecorrperc[1:9], probs = .8)
 corr_values$RMS <- sqrt(mean(corr_values$ecorrperc[1:9]^2))
@@ -387,7 +383,7 @@ corr_values$SD <- sd(corr_values$ecorrperc[1:9], na.rm = FALSE)
 
 corr_values[c(1:9), -1] <- round(corr_values[c(1:9), -1], digits = 1)
 corr_values_ggplot <- corr_values
-colnames(corr_values) <- c("EMA", "Erro abs. [W/m^2]", "Rad. Sol. [W/m^2]", "Altura [m]",  "ReSun D03 [W/m^2]", " Erro abs. corr. [W/m^2]", "ReSun D03 corr. [W/m^2]", "Erro abs. [%]", "Per50", "Per80", "RMS", "SD")
+colnames(corr_values) <- c("EMA", "Erro abs. [W/m^2]", "Rad. Sol. [W/m^2]", "Altura [m]",  "ReSun D03 [W/m^2]", " Erro abs. [W/m^2]", "ReSun D03 corr. [W/m^2]", "Erro abs. corr. [%]", "Per50 s/corr", "Per80 s/corr", "Per50", "Per80", "RMS", "SD")
 
 kable(corr_values[1:9,1:8], caption = 'Valores de Erro Absoluto, rMB[%], para as EMAS em estudo.', align = "c", digits = 3)
 
@@ -471,8 +467,9 @@ Na tabela `r figr("percentile_tab", TRUE, type="Tab.")` é apresentado as medida
 
 ```{r percentile_tab, echo=FALSE, message=FALSE, results='asis', anchor = "Tabela"}
 
-tab <- corr_values[1,9:10]
-row.names(tab) <- "Erro relativo absoluto máximo [%]"
+tab <- corr_values[1,10:11]
+tab[2,] <- corr_values[1,12:13]
+row.names(tab) <- c("Erro relativo absoluto máximo s/correção [%]","Erro relativo absoluto máximo c/correção [%]")
 colnames(tab) <- c("Probabilidade 50%", "Probabilidade 80%")
 
 kable(tab, caption = 'Erro relativo absoluto máximo para diferentes cenários de probabilidade da validação ReSun.', align = "c", digits = 3)
